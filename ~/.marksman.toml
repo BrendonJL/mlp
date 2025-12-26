@@ -1,0 +1,5 @@
+[core]
+markdown.file_extensions = ["md", "markdown"]
+
+[lsp]
+diagnostics = false
