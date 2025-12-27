@@ -36,6 +36,18 @@ MANIFEST
 *.manifest
 *.spec
 
+# Obsidian
+docs/.obsidian/
+.obsidian/
+docs/.smart-env/
+docs/copilot/
+
+# Environment files that might contain secrets
+.env
+.env.local
+*.key
+**/data.json
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt

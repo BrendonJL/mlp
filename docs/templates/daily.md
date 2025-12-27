@@ -1,3 +1,6 @@
+---
+tags: [daily, mario-rl-project, learning]
+---
 # {{date}}
 
 ## Today's Goals

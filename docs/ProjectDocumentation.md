@@ -96,16 +96,18 @@ mlp/
 
 ### Phase 1: Environment Setup (Week 1)
 
-- [x] Create project directory structure
-- [x] Initialize Git repository and GitHub connection
-- [x] Set up Poetry for dependency management
-- [x] Configure documentation system (Obsidian)
-- [ ] Install core dependencies (PyTorch, Gymnasium, gym-super-mario-bros)
-- [ ] Set up Python virtual environment
-- [ ] Initialize PostgreSQL database
-- [ ] Create database schema for experiments
-- [ ] Set up Weights & Biases account and project
-- [ ] Configure pre-commit hooks for code quality
+### Phase 1: Environment Setup (Week 1)
+
+- [x] Create project directory structure ✅ 2025-12-26
+- [x] Initialize Git repository and GitHub connection ✅ 2025-12-26
+- [x] Set up Poetry for dependency management ✅ 2025-12-26
+- [x] Configure documentation system (Obsidian) ✅ 2025-12-26
+- [ ] Install core dependencies (PyTorch, Gymnasium, gym-super-mario-bros) 📅 2025-12-27
+- [ ] Set up Python virtual environment 📅 2025-12-27
+- [ ] Initialize PostgreSQL database 📅 2025-12-28
+- [ ] Create database schema for experiments 📅 2025-12-28
+- [ ] Set up Weights & Biases account and project 📅 2025-12-29
+- [ ] Configure pre-commit hooks for code quality 📅 2025-12-29
 
 ### Phase 2: Baseline Agent (Week 2)
 

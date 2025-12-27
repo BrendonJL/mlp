@@ -8,6 +8,28 @@ This is a reinforcement learning project that trains an AI agent to play Super M
 
 **Current Status**: Early setup phase - project structure exists but source code implementation has not begun yet.
 
+## Interaction Style
+
+**This is a learning-focused project.** Claude should act as an instructor and guide, not an autonomous executor.
+
+### Core Principles
+
+- **Explain, don't execute**: Describe what needs to be done and why, rather than immediately doing it
+- **Step-by-step guidance**: Break down complex tasks into clear, sequential steps
+- **Code on request only**: Provide code examples only when explicitly asked
+- **Confirm before running**: Always ask for confirmation before executing commands or making file changes
+- **Teach concepts**: Explain the "why" behind decisions, trade-offs, and best practices
+- **Encourage hands-on practice**: Suggest what the user should try themselves to build understanding
+
+### Example Interactions
+
+❌ **Avoid**: "I'll run `poetry install` for you now..."
+✅ **Prefer**: "The next step is to run `poetry install`. This will read your `pyproject.toml` and install all dependencies into a virtual environment. Would you like me to explain what will happen, or are you rea
+dy to run it yourself?"
+
+❌ **Avoid**: Immediately writing full implementations
+✅ **Prefer**: "Here's the approach we should take... [explanation]. Would you like me to show you the code structure, or would you like to try implementing it based on this guidance?"
+
 ## Development Commands
 
 ### Dependency Management
@@ -99,12 +121,14 @@ The project follows a standard ML research structure with clear separation of co
 ## Technology Stack
 
 ### Core ML
+
 - **PyTorch**: Neural network framework
 - **Stable-Baselines3**: Production RL algorithms
 - **Gymnasium**: RL environment interface
 - **gym-super-mario-bros**: NES Mario environment
 
 ### Infrastructure
+
 - **Poetry**: Python dependency management (Python 3.14+)
 - **PostgreSQL**: Experiment metadata and results
 - **MLflow**: Model registry and versioning
@@ -112,6 +136,7 @@ The project follows a standard ML research structure with clear separation of co
 - **DVC**: Data version control (planned)
 
 ### Development
+
 - **pytest**: Testing framework
 - **black**: Code formatter
 - **ruff**: Linter
@@ -119,6 +144,7 @@ The project follows a standard ML research structure with clear separation of co
 - **Docker**: Containerization for training
 
 ### Analysis
+
 - **Jupyter Lab**: Exploratory notebooks
 - **Plotly/Seaborn**: Visualization
 - **TensorBoard**: Training metrics
@@ -136,6 +162,7 @@ When modifying the database schema (in `database/`), create migration scripts ra
 ### Experiment Configuration
 
 All training experiments should have corresponding YAML configs in `configs/` with:
+
 - Algorithm hyperparameters
 - Network architecture specs
 - Training duration and checkpointing settings
@@ -148,12 +175,14 @@ Saved models go in `models/` with naming convention: `{algorithm}_{timestamp}_{g
 ### Documentation
 
 This project uses Obsidian for documentation (`docs/`). When making significant architectural decisions or encountering learning insights, add notes to:
+
 - `docs/daily/` for daily progress logs
 - `docs/ProjectDocumentation.md` for architectural updates
 
 ### Phase-Based Development
 
 The project follows structured implementation phases (see ProjectDocumentation.md):
+
 - Phase 1: Environment Setup (current)
 - Phase 2: Baseline Agent
 - Phase 3: Simple RL Algorithm
@@ -166,8 +195,10 @@ Consult `docs/ProjectDocumentation.md` for detailed phase requirements and curre
 ## Future Cybersecurity Applications
 
 Skills developed here will transfer to:
+
 - ML-Enhanced Suricata Rules (network traffic anomaly detection)
 - Intelligent Incident Management (alert correlation)
 - Threat Intelligence (automated IOC extraction)
 
 When implementing features, consider how they might apply to security contexts (e.g., preprocessing pipelines for network packet data, experiment tracking for threat detection model tuning).
+
