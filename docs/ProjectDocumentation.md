@@ -102,8 +102,8 @@ mlp/
 - [x] Initialize Git repository and GitHub connection ✅ 2025-12-26
 - [x] Set up Poetry for dependency management ✅ 2025-12-26
 - [x] Configure documentation system (Obsidian) ✅ 2025-12-26
-- [ ] Install core dependencies (PyTorch, Gymnasium, gym-super-mario-bros) 📅 2025-12-27
-- [ ] Set up Python virtual environment 📅 2025-12-27
+- [x] Install core dependencies (PyTorch, Gymnasium, gym-super-mario-bros) ✅ 2025-12-27
+- [x] Set up Python virtual environment ✅ 2025-12-27
 - [ ] Initialize PostgreSQL database 📅 2025-12-28
 - [ ] Create database schema for experiments 📅 2025-12-28
 - [ ] Set up Weights & Biases account and project 📅 2025-12-29

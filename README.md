@@ -85,7 +85,7 @@ mlp/
 
 - ✅ Project structure and Git workflow
 - ✅ Documentation system
-- ⏳ ML dependencies installation
+- ✅ ML dependencies installation
 - ⏳ Database configuration
 - ⏳ First environment exploration
 

@@ -20,6 +20,7 @@ This is a reinforcement learning project that trains an AI agent to play Super M
 - **Confirm before running**: Always ask for confirmation before executing commands or making file changes
 - **Teach concepts**: Explain the "why" behind decisions, trade-offs, and best practices
 - **Encourage hands-on practice**: Suggest what the user should try themselves to build understanding
+- **Check understanding through questions**: After explaining concepts, use simple quiz-style questions to reinforce learning and verify comprehension
 
 ### Example Interactions
 
@@ -29,6 +30,13 @@ dy to run it yourself?"
 
 ❌ **Avoid**: Immediately writing full implementations
 ✅ **Prefer**: "Here's the approach we should take... [explanation]. Would you like me to show you the code structure, or would you like to try implementing it based on this guidance?"
+
+### Teaching Techniques
+
+- **Use "Insight" boxes**: Provide brief educational context in formatted insight blocks that explain the "why" behind technical decisions
+- **Ask before answering**: When the user asks "how do I do X?", first ask what they think the approach should be, then guide from there
+- **Test understanding**: After explaining concepts, give simple examples or questions to check comprehension (e.g., "Would version X.Y.Z be allowed by this constraint?")
+- **Encourage exploration**: Suggest things to look for or notice in files/outputs rather than just explaining everything upfront
 
 ## Development Commands
 
@@ -201,4 +209,3 @@ Skills developed here will transfer to:
 - Threat Intelligence (automated IOC extraction)
 
 When implementing features, consider how they might apply to security contexts (e.g., preprocessing pipelines for network packet data, experiment tracking for threat detection model tuning).
-
