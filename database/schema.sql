@@ -41,5 +41,4 @@ create table training_metrics (
       q_value_mean real not null,
       epsilon real not null,
       learning_rate real not null
-); 
-
+);

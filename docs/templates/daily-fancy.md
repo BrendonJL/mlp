@@ -12,9 +12,9 @@ created: <% tp.file.creation_date() %>
 
 ## 🎯 Today's Goals
 
-- [ ] 
-- [ ] 
-- [ ] 
+- [ ]
+- [ ]
+- [ ]
 
 ## ✅ What I Accomplished
 
@@ -22,12 +22,12 @@ created: <% tp.file.creation_date() %>
 
 ## 🧠 What I Learned
 
-- 
+-
 
 ## 💡 Challenges & Solutions
 
-- **Challenge**: 
-- **Solution**: 
+- **Challenge**:
+- **Solution**:
 
 ## 🔜 Tomorrow's Focus
 
@@ -47,7 +47,7 @@ created: <% tp.file.creation_date() %>
 
 ## 📝 Notes
 
-<%* 
+<%*
 const hour = tp.date.now("H");
 let greeting;
 if (hour < 12) greeting = "Good morning!";

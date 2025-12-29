@@ -24,7 +24,7 @@ tags:
 
 ## Next Steps
 
-- 
+-
 
 ## Related
 

@@ -17,18 +17,18 @@ status: draft
 
 ## 🔑 Key Points
 
-- 
-- 
-- 
+-
+-
+-
 
 ## 🔗 Related Concepts
 
 - [[ProjectDocumentation]]
-- 
+-
 
 ## 📚 References
 
-- 
+-
 
 ## 📝 Notes
 
@@ -47,7 +47,7 @@ status: in-progress
 
 # 🔬 <% tp.file.title %>
 
-**Date:** <% tp.file.creation_date("MMMM DD, YYYY") %>  
+**Date:** <% tp.file.creation_date("MMMM DD, YYYY") %>
 **Experimenter:** Brendon Lasley
 
 ---
@@ -58,9 +58,9 @@ status: in-progress
 
 ## 📊 Data Sources
 
-- **Dataset**: 
-- **Location**: 
-- **Size**: 
+- **Dataset**:
+- **Location**:
+- **Size**:
 
 ## 🔍 Analysis
 
@@ -74,7 +74,7 @@ status: in-progress
 
 ## 📈 Results
 
-<%* 
+<%*
 const status = await tp.system.suggester(
   ["✅ Success", "⚠️ Partial Success", "❌ Failed", "🔄 In Progress"],
   ["success", "partial", "failed", "in-progress"]
@@ -94,7 +94,7 @@ const status = await tp.system.suggester(
 ## 🔗 Related
 
 - [[ProjectDocumentation]]
-- 
+-
 
 ---
 

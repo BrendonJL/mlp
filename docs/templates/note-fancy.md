@@ -17,18 +17,18 @@ status: draft
 
 ## 🔑 Key Points
 
-- 
-- 
-- 
+-
+-
+-
 
 ## 🔗 Related Concepts
 
 - [[ProjectDocumentation]]
-- 
+-
 
 ## 📚 References
 
-- 
+-
 
 ## 📝 Notes
 
