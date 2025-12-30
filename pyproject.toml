@@ -4,9 +4,18 @@ version = "0.1.0"
 description = "Learning ML with Mario"
 authors = [{ name = "Brendon Lasley", email = "lasleybrendon@gmail.com" }]
 readme = "README.md"
-requires-python = ">=3.14,<3.15"
-dependencies = ["torch (>=2.9.1,<3.0.0)", "gymnasium (>=1.2.3,<2.0.0)", "gym-super-mario-bros (>=7.4.0,<8.0.0)", "psycopg2-binary (>=2.9.11,<3.0.0)", "wandb (>=0.23.1,<0.24.0)"]
+requires-python = ">=3.11,<3.15"
+dependencies = [
+  "torch (>=2.9.1,<3.0.0)",
+  "gymnasium (>=1.2.3,<2.0.0)",
+  "gym-super-mario-bros (>=7.4.0,<8.0.0)",
+  "psycopg2-binary (>=2.9.11,<3.0.0)",
+  "wandb (>=0.23.1,<0.24.0)",
+  "numpy (<2.0)",
+]
 
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

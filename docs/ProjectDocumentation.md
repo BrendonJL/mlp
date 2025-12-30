@@ -109,7 +109,7 @@ mlp/
 
 ### Phase 2: Baseline Agent (Weeks 1-2, Jan 2026)
 
-- [ ] Install and test gym-super-mario-bros environment 📅 2026-01-02
+- [x] Install and test gym-super-mario-bros environment ✅ 2025-12-30
 - [ ] Implement random agent to understand environment mechanics 📅 2026-01-05
 - [ ] Build frame preprocessing pipeline: 📅 2026-01-08
   - [ ] Grayscale conversion 📅 2026-01-06
