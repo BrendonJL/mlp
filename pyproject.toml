@@ -12,6 +12,8 @@ dependencies = [
   "psycopg2-binary (>=2.9.11,<3.0.0)",
   "wandb (>=0.23.1,<0.24.0)",
   "numpy (<2.0)",
+  "matplotlib (>=3.10.8,<4.0.0)",
+  "opencv-python (<4.11)",
 ]
 
 [tool.poetry]
@@ -26,3 +28,4 @@ pytest = "^9.0.2"
 black = "^25.12.0"
 ruff = "^0.14.10"
 pre-commit = "^4.5.1"
+jupyter = "^1.1.1"

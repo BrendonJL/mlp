@@ -110,13 +110,13 @@ mlp/
 ### Phase 2: Baseline Agent (Weeks 1-2, Jan 2026)
 
 - [x] Install and test gym-super-mario-bros environment ✅ 2025-12-30
-- [ ] Implement random agent to understand environment mechanics 📅 2026-01-05
-- [ ] Build frame preprocessing pipeline: 📅 2026-01-08
-  - [ ] Grayscale conversion 📅 2026-01-06
-  - [ ] Frame resizing 📅 2026-01-07
-  - [ ] Frame stacking (temporal context) 📅 2026-01-08
-  - [ ] Normalization 📅 2026-01-08
-- [ ] Create first Jupyter notebook for environment exploration 📅 2026-01-09
+- [x] Implement random agent to understand environment mechanics 📅 2026-01-05 ✅ 2025-12-31
+- [x] Build frame preprocessing pipeline: 📅 2026-01-08 ✅ 2025-12-31
+  - [x] Grayscale conversion 📅 2026-01-06 ✅ 2025-12-31
+  - [x] Frame resizing 📅 2026-01-07 ✅ 2025-12-31
+  - [x] Frame stacking (temporal context) 📅 2026-01-08 ✅ 2025-12-31
+  - [x] Normalization 📅 2026-01-08 ✅ 2025-12-31
+- [x] Create first Jupyter notebook for environment exploration 📅 2026-01-09 ✅ 2025-12-31
 - [ ] Log baseline experiment to Weights & Biases 📅 2026-01-10
 - [ ] Record and save gameplay videos 📅 2026-01-12
 
