@@ -75,9 +75,12 @@ mlp/
 - [x] Set up production-grade ML project structure
 - [x] Configure PostgreSQL for experiment tracking
 - [x] Implement database schema design with relational integrity
-- [ ] Master reinforcement learning fundamentals
+- [x] Establish baseline metrics for RL environments
+- [x] Build preprocessing pipelines for game state observations
+- [x] Integrate cloud experiment tracking (Weights & Biases)
+- [ ] Master reinforcement learning fundamentals (DQN, PPO)
 - [ ] Build and train custom neural network architectures
-- [ ] Implement experiment tracking and reproducibility
+- [ ] Implement reproducible experiment configurations (YAML)
 - [ ] Deploy containerized ML applications
 - [ ] Apply ML to real-world security problems
 
@@ -93,16 +96,36 @@ The foundation is solid! Completed in 3 days:
 - ✅ Weights & Biases cloud experiment tracking
 - ✅ Pre-commit hooks for automated code quality
 
-**🎯 Next Up: Phase 2 - Baseline Agent** (Starting Jan 2026)
+**✅ Phase 2: Baseline Agent** (Complete - Dec 30-31, 2025)
 
-- Install gym-super-mario-bros environment
-- Implement random agent for baseline metrics
-- Build frame preprocessing pipeline
-- Create first Jupyter analysis notebook
+Production-quality baseline established:
+- ✅ Random agent implementation with 10-episode baseline run
+- ✅ Enhanced metrics tracking (13 comprehensive values)
+- ✅ Frame preprocessing pipeline (grayscale, resize, normalize, frame stack)
+- ✅ Weights & Biases cloud logging with authentication
+- ✅ PostgreSQL schema migration for episode metrics
+- ✅ Jupyter notebook for environment exploration
+- ✅ Success criteria defined for Phase 3 (x_pos > 434, score ≥ 100, flag_get = True)
+
+**Baseline Performance:**
+- Average reward: ~380
+- Max distance (x_pos): 434
+- Level completions: 0/10 (expected for random)
+- Episode length: 1000 steps (always timeout)
+
+**🎯 Next Up: Phase 3 - DQN Training** (Starting Jan 2026)
+
+- Implement Deep Q-Network using Stable-Baselines3
+- Create YAML configuration system for hyperparameters
+- Build training loop with checkpointing and logging
+- Integrate PostgreSQL experiment tracking
+- Train until Mario beats World 1-1!
 
 See [ProjectDocumentation.md](docs/ProjectDocumentation.md) for complete timeline and detailed implementation phases.
 
 ### Recent Highlights
+
+**Dec 31, 2025** - Phase 2 complete! Built comprehensive random baseline with 13 tracked metrics (x_pos, score, time, coins, life, status, flag_get, etc.), integrated wandb cloud tracking with authentication, extended database schema with 8 new episode metric columns, and established success criteria for Phase 3. Attempted video recording but encountered gym-super-mario-bros render limitations - pragmatically chose metrics-only approach. **Ready for DQN training!** 🚀
 
 **Dec 29, 2025** - Designed and implemented complete database schema for ML experiment tracking. Learned SQL CREATE TABLE syntax, foreign key relationships, and the Entity-Attribute-Value pattern for flexible hyperparameter storage. Set up W&B and pre-commit hooks. Phase 1 complete! 🎉
 

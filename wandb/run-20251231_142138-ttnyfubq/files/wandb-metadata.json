@@ -1,0 +1,28 @@
+{
+  "os":  "Linux-6.17.9-300.fc43.x86_64-x86_64-with-glibc2.42",
+  "python":  "CPython 3.11.14",
+  "startedAt":  "2025-12-31T19:21:38.401591Z",
+  "program":  "/home/blasley/mlp/scripts/random_agent.py",
+  "codePath":  "scripts/random_agent.py",
+  "codePathLocal":  "scripts/random_agent.py",
+  "git":  {
+    "remote":  "git@github.com:BrendonJL/mlp.git",
+    "commit":  "cf38ce0badaeb1a89dbbc565a6dd4a28e345757e"
+  },
+  "email":  "lasleybrendon@gmail.com",
+  "root":  "/home/blasley/mlp",
+  "host":  "fedora",
+  "executable":  "/home/blasley/mlp/.venv/bin/python",
+  "cpu_count":  6,
+  "cpu_count_logical":  12,
+  "disk":  {
+    "/":  {
+      "total":  "247526850560",
+      "used":  "132361826304"
+    }
+  },
+  "memory":  {
+    "total":  "33441628160"
+  },
+  "writerId":  "2y7c1qtsb6eyj3250o8c6alnnm526xda"
+}

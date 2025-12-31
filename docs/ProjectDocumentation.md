@@ -107,18 +107,30 @@ mlp/
 - [x] Set up Weights & Biases account and project ✅ 2025-12-29
 - [x] Configure pre-commit hooks for code quality ✅ 2025-12-29
 
-### Phase 2: Baseline Agent (Weeks 1-2, Jan 2026)
+### Phase 2: Baseline Agent ✅ COMPLETE (Dec 30-31, 2025)
 
 - [x] Install and test gym-super-mario-bros environment ✅ 2025-12-30
-- [x] Implement random agent to understand environment mechanics 📅 2026-01-05 ✅ 2025-12-31
-- [x] Build frame preprocessing pipeline: 📅 2026-01-08 ✅ 2025-12-31
-  - [x] Grayscale conversion 📅 2026-01-06 ✅ 2025-12-31
-  - [x] Frame resizing 📅 2026-01-07 ✅ 2025-12-31
-  - [x] Frame stacking (temporal context) 📅 2026-01-08 ✅ 2025-12-31
-  - [x] Normalization 📅 2026-01-08 ✅ 2025-12-31
-- [x] Create first Jupyter notebook for environment exploration 📅 2026-01-09 ✅ 2025-12-31
-- [ ] Log baseline experiment to Weights & Biases 📅 2026-01-10
-- [ ] Record and save gameplay videos 📅 2026-01-12
+- [x] Implement random agent to understand environment mechanics ✅ 2025-12-31
+- [x] Build frame preprocessing pipeline: ✅ 2025-12-31
+  - [x] Grayscale conversion ✅ 2025-12-31
+  - [x] Frame resizing ✅ 2025-12-31
+  - [x] Frame stacking (temporal context) ✅ 2025-12-31
+  - [x] Normalization ✅ 2025-12-31
+- [x] Create first Jupyter notebook for environment exploration ✅ 2025-12-31
+- [x] Log baseline experiment to Weights & Biases ✅ 2025-12-31
+- [x] Enhanced baseline with 13 comprehensive metrics ✅ 2025-12-31
+- [x] Database schema migration for episode metrics ✅ 2025-12-31
+- [~] Record and save gameplay videos ⚠️ Deferred (see note below)
+
+**Phase 2 Achievements:**
+- Random baseline: avg reward ~380, max x_pos 434, 0/10 level completions
+- Enhanced metrics: 13 tracked values (x_pos, score, time, coins, life, status, flag_get, etc.)
+- wandb cloud integration with authentication and real-time logging
+- PostgreSQL schema extended with 8 new episode metric columns
+- Success criteria defined: x_pos > 434, score ≥ 100, flag_get = True
+
+**Video Recording Note:**
+Attempted multiple approaches (RecordVideo wrapper, manual imageio frame collection) but discovered gym-super-mario-bros has render_mode='rgb_array' compatibility issues (unmaintained since 2019). Videos created but contain static frames. **Decision: Proceed with metrics-only approach.** Comprehensive wandb tracking provides sufficient baseline proof. Video recording deferred to Phase 3 with alternative approach (render_mode='human' + screen recording).
 
 ### Phase 3: Simple RL Algorithm (Weeks 3-5, Jan-Feb 2026)
 
