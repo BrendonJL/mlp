@@ -27,18 +27,36 @@ This project represents my hands-on journey into machine learning through practi
 ```
 mlp/
 ├── src/                  # Source code
-│   ├── agents/          # RL agent implementations (DQN, PPO)
-│   ├── environments/    # Game environment wrappers
-│   ├── models/          # Neural network architectures
+│   ├── agents/          # RL agent implementations (planned)
+│   ├── environments/    # Game environment wrappers + preprocessing
+│   │   ├── mario_env.py
+│   │   └── wrappers.py
+│   ├── models/          # Neural network architectures (planned)
 │   ├── training/        # Training loops and callbacks
+│   │   ├── train.py
+│   │   └── callbacks.py
 │   └── utils/           # Helper functions
-├── configs/             # Hyperparameter configurations
+│       ├── config_loader.py
+│       └── db_logger.py
+├── configs/             # Hyperparameter configurations (YAML)
+│   └── dqn_baseline.yaml
+├── models/              # Saved model checkpoints
+│   └── dqn_baseline_world1-1_final.zip
 ├── notebooks/           # Jupyter analysis notebooks
-├── docs/                # Project documentation
+│   └── 01_environment_exploration.ipynb
+├── scripts/             # Testing and exploration scripts
+│   ├── random_agent.py
+│   └── test_explore_env.py
+├── database/            # SQL schemas and migrations
+│   ├── schema.sql
+│   └── schema_migration_01.sql
+├── docs/                # Project documentation (Obsidian vault)
 │   ├── ProjectDocumentation.md
 │   └── daily/          # Learning journal
-├── tests/              # Unit tests
-└── docker/             # Container configurations
+├── tests/              # Unit tests (planned)
+├── docker/             # Container configurations (planned)
+├── CLAUDE.md           # Instructions for Claude Code
+└── .pre-commit-config.yaml  # Code quality automation
 ```
 
 ## 🛠️ Tech Stack
@@ -113,17 +131,29 @@ Production-quality baseline established:
 - Level completions: 0/10 (expected for random)
 - Episode length: 1000 steps (always timeout)
 
-**🎯 Next Up: Phase 3 - DQN Training** (Starting Jan 2026)
+**🔄 Phase 3: Simple RL Algorithm** (In Progress - Jan 2-15, 2026)
 
-- Implement Deep Q-Network using Stable-Baselines3
-- Create YAML configuration system for hyperparameters
-- Build training loop with checkpointing and logging
-- Integrate PostgreSQL experiment tracking
-- Train until Mario beats World 1-1!
+Progress: 9/12 tasks complete (75%)
+
+✅ Completed:
+- DQN conceptual learning (Q-networks, experience replay, target networks)
+- YAML configuration system for reproducible experiments
+- Complete training pipeline with git metadata tracking
+- Custom Gym wrappers (5 total: Compatibility, Grayscale, Resize, FrameStack, Transpose)
+- Database logging utilities with connection pooling
+- Wandb and PostgreSQL integration callbacks
+- **First successful end-to-end training run (1000 timesteps)!** ✅
+
+⏳ Next:
+- Run full 2M timestep DQN training
+- Create evaluation script
+- Build analysis notebook
 
 See [ProjectDocumentation.md](docs/ProjectDocumentation.md) for complete timeline and detailed implementation phases.
 
 ### Recent Highlights
+
+**Jan 3, 2026** - **HUGE MILESTONE!** After 3 hours of systematic debugging, achieved first successful end-to-end training run! Fixed 12 integration issues including module imports, config mismatches, API compatibility between old Gym and new Gymnasium, image format for PyTorch, and wrapper design. Built 5 custom wrappers following Single Responsibility Principle. Added git commit hash, Python version, and PyTorch version tracking for reproducibility. Database and wandb logging verified. **Ready for full 2M timestep training!** 🚀
 
 **Dec 31, 2025** - Phase 2 complete! Built comprehensive random baseline with 13 tracked metrics (x_pos, score, time, coins, life, status, flag_get, etc.), integrated wandb cloud tracking with authentication, extended database schema with 8 new episode metric columns, and established success criteria for Phase 3. Attempted video recording but encountered gym-super-mario-bros render limitations - pragmatically chose metrics-only approach. **Ready for DQN training!** 🚀
 

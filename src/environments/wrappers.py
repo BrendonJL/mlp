@@ -5,6 +5,24 @@ import cv2
 from collections import deque
 
 
+class CompatibilityWrapper(gym.Wrapper):
+    """Wrapper to handle API compatibility between old and new Gym versions."""
+
+    def reset(self, **kwargs):
+        # Try with kwargs first (new API)
+        try:
+            result = self.env.reset(**kwargs)
+        except TypeError:
+            # Fallback to no kwargs (old API)
+            result = self.env.reset()
+
+        # Ensure result is always (obs, info) tuple for new API
+        if isinstance(result, tuple):
+            return result  # Already (obs, info)
+        else:
+            return result, {}  # Convert obs -> (obs, {})
+
+
 class GrayscaleWrapper(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
@@ -57,22 +75,27 @@ class FrameStackWrapper(gym.ObservationWrapper):
 
         self.frames = deque(maxlen=num_stack)
 
+        # Use uint8 [0, 255] to match input from ResizeWrapper
         self.observation_space = spaces.Box(
-            low=0.0, high=1, shape=(84, 84, num_stack), dtype=np.float32
+            low=0, high=255, shape=(84, 84, num_stack), dtype=np.uint8
         )
 
-    def reset(self):
-        obs = self.env.reset()
+    def reset(self, **kwargs):
+        result = self.env.reset(**kwargs)
 
-        # Handle tuple return from gym API
-        if isinstance(obs, tuple):
-            obs = obs[0]  # Just take the observation
+        # Handle both old and new Gym API
+        if isinstance(result, tuple):
+            obs, info = result
+        else:
+            obs = result
+            info = {}
 
         # Initialize frame buffer
         for _ in range(self.num_stack):
             self.frames.append(obs)
 
-        return self._get_stacked_frames()
+        # Return (obs, info) tuple for new API
+        return self._get_stacked_frames(), info
 
     def observation(self, obs):
         self.frames.append(obs)
@@ -81,6 +104,29 @@ class FrameStackWrapper(gym.ObservationWrapper):
 
     def _get_stacked_frames(self):
         return np.concatenate(list(self.frames), axis=-1)
+
+
+class TransposeWrapper(gym.ObservationWrapper):
+    """Transpose observation from (H, W, C) to (C, H, W) for PyTorch."""
+
+    def __init__(self, env):
+        super().__init__(env)
+        # Get original shape (H, W, C)
+        obs_shape = self.env.observation_space.shape
+        # Transpose to (C, H, W)
+        new_shape = (obs_shape[2], obs_shape[0], obs_shape[1])
+
+        # Keep dtype as uint8 [0, 255] for SB3 compatibility
+        self.observation_space = spaces.Box(
+            low=0,
+            high=255,
+            shape=new_shape,
+            dtype=np.uint8,
+        )
+
+    def observation(self, obs):
+        # Transpose from (H, W, C) to (C, H, W)
+        return np.transpose(obs, (2, 0, 1))
 
 
 if __name__ == "__main__":

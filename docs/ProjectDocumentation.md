@@ -24,28 +24,51 @@ The ultimate goal extends beyond Mario: I'm building skills and establishing wor
 
 ```
 mlp/
+├── .claude/              # Claude Code settings
 ├── configs/              # Hyperparameter configurations (YAML files)
+│   └── dqn_baseline.yaml
 ├── data/                 # Training logs, gameplay videos, episode data
+│   ├── logs/
+│   └── videos/
 ├── database/             # SQL schemas, migration scripts for experiment metadata
-├── docker/               # Dockerfiles for containerized training/deployment
+│   ├── schema.sql
+│   └── schema_migration_01.sql
+├── docker/               # Dockerfiles for containerized training/deployment (planned)
 ├── docs/                 # Project documentation and notes (Obsidian vault)
 │   ├── daily/           # Daily logs and progress notes
-│   └── ProjectDocumentation.md
+│   ├── templates/       # Note templates
+│   ├── ProjectDocumentation.md
+│   └── Tasks Dashboard.md
 ├── .github/
-│   └── workflows/       # CI/CD pipelines for automated testing
-├── models/              # Saved model checkpoints and weights
-├── notebooks/           # Jupyter notebooks for analysis and exploration
-├── src/                 # Source code
-│   ├── agents/         # RL agent implementations (DQN, PPO)
-│   ├── environments/   # Gym environment wrappers and preprocessing
-│   ├── models/         # Neural network architectures
-│   ├── preprocessing/  # Frame stacking, normalization, feature extraction
-│   ├── training/       # Training loops and callbacks
-│   └── utils/          # Helper functions and utilities
-├── tests/              # Unit tests for components
-├── pyproject.toml      # Poetry dependency management
-├── README.md           # Project overview and quick start
-└── .gitignore         # Git ignore rules
+│   └── workflows/       # CI/CD pipelines for automated testing (planned)
+├── models/               # Saved model checkpoints and weights
+│   ├── checkpoints/
+│   └── dqn_baseline_world1-1_final.zip
+├── notebooks/            # Jupyter notebooks for analysis and exploration
+│   └── 01_environment_exploration.ipynb
+├── scripts/              # Utility scripts for testing and exploration
+│   ├── random_agent.py
+│   └── test_explore_env.py
+├── src/                  # Source code
+│   ├── agents/          # RL agent implementations (DQN, PPO) (planned)
+│   ├── environments/    # Gym environment wrappers and preprocessing
+│   │   ├── mario_env.py
+│   │   └── wrappers.py
+│   ├── models/          # Neural network architectures (planned)
+│   ├── preprocessing/   # Frame processing utilities (planned)
+│   ├── training/        # Training loops and callbacks
+│   │   ├── callbacks.py
+│   │   └── train.py
+│   ├── utils/           # Helper functions and utilities
+│   │   ├── config_loader.py
+│   │   └── db_logger.py
+│   └── __init__.py
+├── tests/               # Unit tests for components (planned)
+├── CLAUDE.md            # Instructions for Claude Code
+├── .gitignore          # Git ignore rules
+├── .pre-commit-config.yaml  # Pre-commit hooks configuration
+├── pyproject.toml       # Poetry dependency management
+└── README.md            # Project overview and quick start
 ```
 
 ### Key Components
@@ -142,20 +165,22 @@ Attempted multiple approaches (RecordVideo wrapper, manual imageio frame collect
 - [x] Create training script structure (main entry point, argument parsing) ✅ 2026-01-02
 - [x] Integrate Stable-Baselines3 DQN with configuration ✅ 2026-01-02
 - [x] Add custom callbacks for W&B and database logging during training ✅ 2026-01-02
-- [ ] Test end-to-end training run (short trial to verify everything works) 📅 2026-01-03
+- [x] Test end-to-end training run (short trial to verify everything works) ✅ 2026-01-03
 - [ ] Run full DQN training (2M timesteps) 📅 2026-01-03
 - [ ] Create evaluation script (load trained model, run test episodes) 📅 2026-01-05
 - [ ] Build analysis notebook comparing random vs. trained agent 📅 2026-01-08
 
-**Phase 3 Progress: 8/12 tasks complete (67%)**
+**Phase 3 Progress: 9/12 tasks complete (75%)**
 
 **Completed Artifacts:**
 - `configs/dqn_baseline.yaml` - Experiment configuration (2M timesteps, CnnPolicy, SIMPLE_MOVEMENT)
 - `src/utils/config_loader.py` - YAML configuration loader
-- `src/environments/mario_env.py` - Environment helper with simplified actions
-- `src/utils/db_logger.py` - Database logging with connection pooling (5 functions)
-- `src/training/train.py` - Complete training orchestrator with argument parsing
+- `src/environments/mario_env.py` - Environment helper with simplified actions + CompatibilityWrapper
+- `src/environments/wrappers.py` - 5 custom wrappers (Compatibility, Grayscale, Resize, FrameStack, Transpose)
+- `src/utils/db_logger.py` - Database logging with connection pooling (5 functions) + metadata tracking
+- `src/training/train.py` - Complete training orchestrator with git/version metadata tracking
 - `src/training/callbacks.py` - Custom WandbCallback and DatabaseCallback
+- Successful 1000-timestep test run ✅
 
 **Key Learnings:**
 - DQN fundamentals: Q-function, Bellman equation, bootstrapping, experience replay, target networks
@@ -165,6 +190,12 @@ Attempted multiple approaches (RecordVideo wrapper, manual imageio frame collect
 - Stable-Baselines3 integration: CnnPolicy, hyperparameter passing, model.learn() API
 - Callback pattern: Event hooks for logging during training without modifying SB3 code
 - Training pipeline architecture: Orchestrator pattern coordinating config, wandb, database, environment, agent, callbacks
+- **Wrapper composition pattern**: Build complex preprocessing from simple, single-purpose wrappers
+- **Image format conventions**: PyTorch uses (C,H,W), NumPy/TensorFlow use (H,W,C) - TransposeWrapper bridges gap
+- **API compatibility strategies**: CompatibilityWrapper bridges old Gym and new Gymnasium APIs with try/except fallback
+- **Metadata tracking for reproducibility**: Git hash, Python version, PyTorch version logged to database
+- **Systematic debugging**: Fixed 12 integration issues to achieve first successful training run
+- **Real ML engineering**: Integration debugging is 50% of the job - tutorials skip this critical skill!
 
 ### Phase 4: Advanced Techniques (Weeks 6-9, Feb-Mar 2026)
 

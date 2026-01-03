@@ -186,3 +186,23 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+### ML Project Specific ###
+# Model files - too large for git, tracked in wandb/mlflow
+models/**/*.zip
+models/**/*.pth
+models/**/*.h5
+models/**/*.pkl
+models/**/*.ckpt
+!models/.gitkeep
+!models/checkpoints/.gitkeep
+
+# Training data and logs
+data/logs/**
+data/videos/**
+wandb/
+
+# Keep directory structure
+!data/.gitkeep
+!data/logs/.gitkeep
+!data/videos/.gitkeep
