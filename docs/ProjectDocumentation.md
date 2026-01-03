@@ -132,23 +132,39 @@ mlp/
 **Video Recording Note:**
 Attempted multiple approaches (RecordVideo wrapper, manual imageio frame collection) but discovered gym-super-mario-bros has render_mode='rgb_array' compatibility issues (unmaintained since 2019). Videos created but contain static frames. **Decision: Proceed with metrics-only approach.** Comprehensive wandb tracking provides sufficient baseline proof. Video recording deferred to Phase 3 with alternative approach (render_mode='human' + screen recording).
 
-### Phase 3: Simple RL Algorithm (Weeks 3-5, Jan-Feb 2026)
+### Phase 3: Simple RL Algorithm 🔄 IN PROGRESS (Jan 2-15, 2026)
 
-- [ ] Implement DQN using Stable-Baselines3 📅 2026-01-15
-- [ ] Create YAML configuration system for hyperparameters 📅 2026-01-17
-- [ ] Build training loop with: 📅 2026-01-22
-  - [ ] Model checkpointing 📅 2026-01-19
-  - [ ] Progress logging 📅 2026-01-20
-  - [ ] Early stopping conditions 📅 2026-01-22
-- [ ] Track key metrics: 📅 2026-01-24
-  - [ ] Episode reward (total points scored) 📅 2026-01-23
-  - [ ] Episode length (frames survived) 📅 2026-01-23
-  - [ ] Training loss 📅 2026-01-24
-  - [ ] Q-value estimates 📅 2026-01-24
-- [ ] Store all experiment metadata in PostgreSQL 📅 2026-01-26
-- [ ] Create analysis notebook comparing random vs. trained agent 📅 2026-01-29
-- [ ] Generate training curve visualizations 📅 2026-01-31
-- [ ] Implement model evaluation pipeline 📅 2026-02-02
+- [x] Learn DQN concepts (Q-learning, experience replay, target networks) ✅ 2026-01-02
+- [x] Create YAML configuration system for hyperparameters ✅ 2026-01-02
+- [x] Create config loader utility (`src/utils/config_loader.py`) ✅ 2026-01-02
+- [x] Simplify action space with JoypadSpace (256 → 7 actions) ✅ 2026-01-02
+- [x] Build database logging utilities with connection pooling ✅ 2026-01-02
+- [x] Create training script structure (main entry point, argument parsing) ✅ 2026-01-02
+- [x] Integrate Stable-Baselines3 DQN with configuration ✅ 2026-01-02
+- [x] Add custom callbacks for W&B and database logging during training ✅ 2026-01-02
+- [ ] Test end-to-end training run (short trial to verify everything works) 📅 2026-01-03
+- [ ] Run full DQN training (2M timesteps) 📅 2026-01-03
+- [ ] Create evaluation script (load trained model, run test episodes) 📅 2026-01-05
+- [ ] Build analysis notebook comparing random vs. trained agent 📅 2026-01-08
+
+**Phase 3 Progress: 8/12 tasks complete (67%)**
+
+**Completed Artifacts:**
+- `configs/dqn_baseline.yaml` - Experiment configuration (2M timesteps, CnnPolicy, SIMPLE_MOVEMENT)
+- `src/utils/config_loader.py` - YAML configuration loader
+- `src/environments/mario_env.py` - Environment helper with simplified actions
+- `src/utils/db_logger.py` - Database logging with connection pooling (5 functions)
+- `src/training/train.py` - Complete training orchestrator with argument parsing
+- `src/training/callbacks.py` - Custom WandbCallback and DatabaseCallback
+
+**Key Learnings:**
+- DQN fundamentals: Q-function, Bellman equation, bootstrapping, experience replay, target networks
+- YAML configuration management for reproducible experiments
+- Database connection pooling with defensive programming and type safety
+- Simplified action space: SIMPLE_MOVEMENT provides 7 useful actions vs 256 button combinations
+- Stable-Baselines3 integration: CnnPolicy, hyperparameter passing, model.learn() API
+- Callback pattern: Event hooks for logging during training without modifying SB3 code
+- Training pipeline architecture: Orchestrator pattern coordinating config, wandb, database, environment, agent, callbacks
 
 ### Phase 4: Advanced Techniques (Weeks 6-9, Feb-Mar 2026)
 

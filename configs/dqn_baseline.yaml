@@ -1,0 +1,41 @@
+experiment:
+  name: "dqn_baseline_world1-1"
+  description: "FIrst DQN Training run on World 1-1"
+  algorithm: "DQN"
+
+environment:
+  game: "SuperMarioBros-v3"
+  action_space: "SIMPLE_MOVEMENT"
+  render_mode: "rgb_array"
+
+dqn_hyperparameters:
+  policy: "CnnPolicy"
+  learning_rate: 0.0001
+  gamma: 0.99
+  buffer_size: 100000
+  learning_starts: 10000
+  batch_size: 32
+  target_update_interval: 1000
+  exploration_fraction: 0.2
+  exploration_initial_eps: 1.0
+  exploration_final_eps: 0.1
+
+training:
+  total_timesteps: 2000000
+  save_freq: 100000
+  eval_freq: 10000
+
+paths:
+  model_dir: "models/"
+  log_dir: "data/logs/"
+  checkpoint_dir: "models/checkpoints/"
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "mario_rl_db"
+  user: "mario_rl_user"
+
+wandb:
+  project: "mario-rl-agent"
+  tags: ["dqn", "phase-3", "baseline"]
