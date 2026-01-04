@@ -137,8 +137,6 @@ Production-quality baseline established:
 
 **✅ Phase 3: Simple RL Algorithm** (Complete - Jan 2-4, 2026)
 
-Progress: 12/12 tasks complete (100%) ✅
-
 **Major Achievement:** Successfully trained a DQN agent that performs **5.3x better** than random baseline!
 
 **Training Results:**
@@ -168,10 +166,9 @@ Progress: 12/12 tasks complete (100%) ✅
 
 ### 🎮 Watch the Trained Agent Play
 
-<video src="data/
+ <video src="https://github.com/user-attachments/assets/f765d845-52cb-4506-ac57-c3cd909191ab" controls></video>
 
-https://github.com/user-attachments/assets/f765d845-52cb-4506-ac57-c3cd909191ab
-*DQN agent navigating World 1-1 - Notice how it jumps on enemies and moves consistently rightward!*
+  *DQN agent navigating World 1-1 - Notice how it jumps on enemies and moves consistently rightward!*
 
 ### 📊 Training Results Visualizations
 
