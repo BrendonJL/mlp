@@ -168,10 +168,9 @@ Progress: 12/12 tasks complete (100%) ✅
 
 ### 🎮 Watch the Trained Agent Play
 
-<video src="data/videos/dqn_baseline_evaluation_2026-01-04.mp4" controls width="600">
-  Your browser does not support the video tag.
-</video>
+<video src="data/
 
+https://github.com/user-attachments/assets/f765d845-52cb-4506-ac57-c3cd909191ab
 *DQN agent navigating World 1-1 - Notice how it jumps on enemies and moves consistently rightward!*
 
 ### 📊 Training Results Visualizations
