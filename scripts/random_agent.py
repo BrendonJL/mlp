@@ -1,8 +1,18 @@
-# Imports
-import gym_super_mario_bros
-import wandb
-import imageio
-from tqdm import tqdm
+"""Random agent baseline for Mario RL."""
+
+import platform
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))  # noqa: E402
+
+import gym_super_mario_bros  # noqa: E402
+import imageio  # noqa: E402
+import wandb  # noqa: E402
+from tqdm import tqdm  # noqa: E402
+
+from src.utils import db_logger  # noqa: E402
 
 wandb.init(
     project="mario-rl-agent",
@@ -18,6 +28,41 @@ env = gym_super_mario_bros.make(
 
 # Reset environment to get initial observation
 observation = env.reset()
+
+# Get version metadata
+try:
+    git_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+except Exception:
+    git_hash = "unknown"
+
+python_version = platform.python_version()
+
+try:
+    import torch
+
+    pytorch_version = torch.__version__
+except ImportError:
+    pytorch_version = "N/A"
+
+# Create database experiment
+experiment_id = db_logger.create_experiment(
+    experiment_name="random_baseline_world1-1",
+    algorithm="random",
+    git_commit_hash=git_hash,
+    python_version=python_version,
+    pytorch_version=pytorch_version,
+    notes="Random baseline for comparison with DQN agent",
+)
+
+# Log hyperparameters
+db_logger.log_hyperparameters(
+    experiment_id=experiment_id,
+    hyperparams_dict={
+        "num_episodes": 10,
+        "max_steps_per_episode": 1000,
+        "algorithm": "random",
+    },
+)
 
 # Episode Config
 num_episode = 10
@@ -92,8 +137,32 @@ for episode in tqdm(range(num_episode), desc="Random Baseline Episodes"):
         }
     )
 
+    # Log episode to database
+    episode_data = {
+        "episode_number": episode + 1,
+        "total_reward": float(total_reward),
+        "episode_length": int(step),
+        "x_pos": int(final_x_pos),
+        "y_pos": int(final_y_pos),
+        "time": int(final_time),
+        "coins": int(final_coins),
+        "life": int(final_life),
+        "status": str(final_status),
+        "world": int(final_world),
+        "stage": int(final_stage),
+        "score": int(final_score),
+        "flag_get": bool(final_flag_get),
+    }
+    db_logger.log_episode(experiment_id=experiment_id, episode_data=episode_data)
+
+# Update experiment with final status
+db_logger.update_experiment(
+    experiment_id=experiment_id, status="completed", total_episodes=num_episode
+)
+
 # Cleanup
 env.close()
 wandb.finish()
+db_logger.close_connection_pool()
 
 print("\n✅ Baseline complete! Videos saved to data/videos/baseline/")

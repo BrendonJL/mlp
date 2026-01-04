@@ -113,6 +113,7 @@ def main():
         total_timesteps=config["training"]["total_timesteps"],
         callback=callbacks,
         log_interval=4,  # Print stats every 4 episodes
+        progress_bar=True,  # Show tqdm progress bar for training
     )
 
     final_model_path = (

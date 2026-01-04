@@ -10,8 +10,12 @@ from src.environments.wrappers import (
 )
 
 
-def make_mario_env(game_version="SuperMarioBros-v3", action_space=SIMPLE_MOVEMENT):
-    env = gym_super_mario_bros.make(game_version, apply_api_compatibility=True)
+def make_mario_env(
+    game_version="SuperMarioBros-v3", action_space=SIMPLE_MOVEMENT, render_mode=None
+):
+    env = gym_super_mario_bros.make(
+        game_version, apply_api_compatibility=True, render_mode=render_mode
+    )
     env = JoypadSpace(env, action_space)
     env = CompatibilityWrapper(env)  # Handle old/new Gym API differences
     env = GrayscaleWrapper(env)

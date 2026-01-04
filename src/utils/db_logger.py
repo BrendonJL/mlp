@@ -141,25 +141,25 @@ def log_episode(experiment_id: int, episode_data: Dict[str, Any]):
         assert cursor is not None
 
         episode_number = episode_data["episode_number"]
-        total_reward = episode_data["total_reward"]
+        reward = episode_data["total_reward"]  # Maps to 'reward' column
         episode_length = episode_data["episode_length"]
-        x_pos = episode_data["x_pos"]
+        distance_traveled = episode_data["x_pos"]  # Maps to 'distance_traveled' column
         y_pos = episode_data["y_pos"]
         score = episode_data["score"]
         time = episode_data["time"]
         coins = episode_data["coins"]
         life = episode_data["life"]
         status = episode_data["status"]
-        flag_get = episode_data["flag_get"]
+        level_completed = episode_data["flag_get"]  # Maps to 'level_completed' column
         world = episode_data["world"]
         stage = episode_data["stage"]
 
         query = """
             INSERT INTO episodes (
-                experiment_id, episode_number, total_reward, episode_length,
-                x_pos, y_pos, score, time, coins, life, status,
-                flag_get, world, stage
-             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                experiment_id, episode_number, timestamp, reward, episode_length,
+                distance_traveled, y_pos, score, time, coins, life, status,
+                level_completed, world, stage
+             ) VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
 
         cursor.execute(
@@ -167,16 +167,16 @@ def log_episode(experiment_id: int, episode_data: Dict[str, Any]):
             (
                 experiment_id,
                 episode_number,
-                total_reward,
+                reward,
                 episode_length,
-                x_pos,
+                distance_traveled,
                 y_pos,
                 score,
                 time,
                 coins,
                 life,
                 status,
-                flag_get,
+                level_completed,
                 world,
                 stage,
             ),
@@ -184,7 +184,7 @@ def log_episode(experiment_id: int, episode_data: Dict[str, Any]):
 
         conn.commit()
         print(
-            f"✅ Logged episode {episode_number}: reward={total_reward}, x_pos={x_pos}"
+            f"✅ Logged episode {episode_number}: reward={reward}, distance={distance_traveled}"
         )
 
     except Exception as e:

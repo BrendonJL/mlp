@@ -43,9 +43,11 @@ mlp/
 ├── models/              # Saved model checkpoints
 │   └── dqn_baseline_world1-1_final.zip
 ├── notebooks/           # Jupyter analysis notebooks
-│   └── 01_environment_exploration.ipynb
+│   ├── 01_environment_exploration.ipynb
+│   └── 02_baseline_vs_dqn_comparison.ipynb
 ├── scripts/             # Testing and exploration scripts
 │   ├── random_agent.py
+│   ├── evaluate_model.py
 │   └── test_explore_env.py
 ├── database/            # SQL schemas and migrations
 │   ├── schema.sql
@@ -90,15 +92,17 @@ mlp/
 
 ## 🎓 Learning Objectives
 
-- [x] Set up production-grade ML project structure
-- [x] Configure PostgreSQL for experiment tracking
-- [x] Implement database schema design with relational integrity
-- [x] Establish baseline metrics for RL environments
-- [x] Build preprocessing pipelines for game state observations
-- [x] Integrate cloud experiment tracking (Weights & Biases)
-- [ ] Master reinforcement learning fundamentals (DQN, PPO)
-- [ ] Build and train custom neural network architectures
-- [ ] Implement reproducible experiment configurations (YAML)
+- [x] Set up production-grade ML project structure ✅
+- [x] Configure PostgreSQL for experiment tracking ✅
+- [x] Implement database schema design with relational integrity ✅
+- [x] Establish baseline metrics for RL environments ✅
+- [x] Build preprocessing pipelines for game state observations ✅
+- [x] Integrate cloud experiment tracking (Weights & Biases) ✅
+- [x] Master reinforcement learning fundamentals (DQN concepts) ✅
+- [x] Train deep RL agent with neural networks (CnnPolicy) ✅
+- [x] Implement reproducible experiment configurations (YAML) ✅
+- [x] Build evaluation and analysis pipelines ✅
+- [ ] Implement advanced RL algorithms (PPO, curriculum learning)
 - [ ] Deploy containerized ML applications
 - [ ] Apply ML to real-world security problems
 
@@ -131,29 +135,76 @@ Production-quality baseline established:
 - Level completions: 0/10 (expected for random)
 - Episode length: 1000 steps (always timeout)
 
-**🔄 Phase 3: Simple RL Algorithm** (In Progress - Jan 2-15, 2026)
+**✅ Phase 3: Simple RL Algorithm** (Complete - Jan 2-4, 2026)
 
-Progress: 9/12 tasks complete (75%)
+Progress: 12/12 tasks complete (100%) ✅
 
-✅ Completed:
-- DQN conceptual learning (Q-networks, experience replay, target networks)
-- YAML configuration system for reproducible experiments
-- Complete training pipeline with git metadata tracking
-- Custom Gym wrappers (5 total: Compatibility, Grayscale, Resize, FrameStack, Transpose)
-- Database logging utilities with connection pooling
-- Wandb and PostgreSQL integration callbacks
-- **First successful end-to-end training run (1000 timesteps)!** ✅
+**Major Achievement:** Successfully trained a DQN agent that performs **5.3x better** than random baseline!
 
-⏳ Next:
-- Run full 2M timestep DQN training
-- Create evaluation script
-- Build analysis notebook
+**Training Results:**
+- Average reward: **1920** (vs 360 random) - **5.33x improvement** 🎯
+- Average distance: **1024 pixels** (vs 350 random) - **2.92x improvement** 🏃
+- Average score: **590** (vs 40 random) - **14.76x improvement** 💰
+- Training episodes: 785 episodes (~12 hours, 2M timesteps)
+- Database metrics: 13 comprehensive values tracked per episode
+
+**What the Agent Learned:**
+- Consistent rightward movement (3x further than random)
+- Jump on enemies (Goombas) for points
+- Collect coins and power-ups
+- Navigate basic obstacles
+
+**Current Limitations:**
+- Level completion: 0% (never reached the flag at 3266 pixels)
+- Gets stuck at complex obstacle sequences
+- Average progress: 1024 pixels (31% of level)
+
+**Completed Deliverables:**
+- ✅ Full DQN training pipeline with Stable-Baselines3
+- ✅ Evaluation script with video recording (`scripts/evaluate_model.py`)
+- ✅ Comparative analysis notebook (`notebooks/02_baseline_vs_dqn_comparison.ipynb`)
+- ✅ 785 training episodes logged to PostgreSQL + Weights & Biases
+- ✅ Gameplay video of trained agent
+
+### 🎮 Watch the Trained Agent Play
+
+<video src="data/videos/dqn_baseline_evaluation_2026-01-04.mp4" controls width="600">
+  Your browser does not support the video tag.
+</video>
+
+*DQN agent navigating World 1-1 - Notice how it jumps on enemies and moves consistently rightward!*
+
+### 📊 Training Results Visualizations
+
+**Performance Comparison: Random vs DQN**
+
+![Reward Distribution Comparison](docs/images/RandomvsDQN_plot.png)
+
+*Box plot showing dramatic improvement in reward distribution. DQN agent (green) consistently achieves 5x higher rewards than random baseline (coral).*
+
+**DQN Learning Curve**
+
+![DQN Learning Curve](docs/images/Episode_Reward_Plot.png)
+
+*Agent performance over 785 training episodes. The 50-episode moving average (green) shows clear learning progression from ~600 to 2000+ reward. Individual episodes (blue dots) show exploration variance.*
+
+**View the Analysis:**
+- 📊 [Interactive Jupyter Notebook](notebooks/02_baseline_vs_dqn_comparison.ipynb) - Full analysis with code
+- 📈 [Weights & Biases Dashboard](https://wandb.ai/blasley/mario-rl-agent) - Live training metrics
+
+**Technical Highlights:**
+- Fixed 29 integration bugs across training and evaluation
+- Learned deterministic vs stochastic policy evaluation
+- Built complete ML workflow: train → evaluate → analyze → iterate
+- Achieved reproducibility with git hash + version tracking
 
 See [ProjectDocumentation.md](docs/ProjectDocumentation.md) for complete timeline and detailed implementation phases.
 
 ### Recent Highlights
 
-**Jan 3, 2026** - **HUGE MILESTONE!** After 3 hours of systematic debugging, achieved first successful end-to-end training run! Fixed 12 integration issues including module imports, config mismatches, API compatibility between old Gym and new Gymnasium, image format for PyTorch, and wrapper design. Built 5 custom wrappers following Single Responsibility Principle. Added git commit hash, Python version, and PyTorch version tracking for reproducibility. Database and wandb logging verified. **Ready for full 2M timestep training!** 🚀
+**Jan 4, 2026** - **PHASE 3 COMPLETE!** 🎉 Agent achieved 5.3x improvement over random baseline! Built evaluation script and comprehensive analysis notebook with interactive visualizations. Discovered agent learned meaningful strategies (rightward movement, enemy interaction, coin collection) but still struggles with level completion (0% success rate - reaches 31% of level). Key technical learning: deterministic vs stochastic policy evaluation. Fixed 13 additional bugs during evaluation development. Total Phase 3 impact: 29 bugs fixed, 500+ lines of code, complete ML workflow established (train → evaluate → analyze). Recorded gameplay video showing trained agent in action. **Phase 3 complete in 3 days!** 🚀
+
+**Jan 3, 2026** - **HUGE MILESTONE!** After 3 hours of systematic debugging, achieved first successful end-to-end training run! Fixed 12 integration issues including module imports, config mismatches, API compatibility between old Gym and new Gymnasium, image format for PyTorch, and wrapper design. Built 5 custom wrappers following Single Responsibility Principle. Added git commit hash, Python version, and PyTorch version tracking for reproducibility. Database and wandb logging verified. Launched full 2M timestep training (785 episodes, ~12 hours). **DQN training successful!** 🚀
 
 **Dec 31, 2025** - Phase 2 complete! Built comprehensive random baseline with 13 tracked metrics (x_pos, score, time, coins, life, status, flag_get, etc.), integrated wandb cloud tracking with authentication, extended database schema with 8 new episode metric columns, and established success criteria for Phase 3. Attempted video recording but encountered gym-super-mario-bros render limitations - pragmatically chose metrics-only approach. **Ready for DQN training!** 🚀
 
