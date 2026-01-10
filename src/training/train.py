@@ -4,11 +4,12 @@ import sys
 import torch
 import wandb
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
-from stable_baselines3 import DQN
+from stable_baselines3 import DQN, PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 from src.utils.config_loader import load_config
 from src.utils import db_logger
 from src.environments.mario_env import make_mario_env
+from src.environments.vec_mario_env import make_vec_mario_env
 from src.training.callbacks import WandbCallback, DatabaseCallback
 
 
@@ -73,29 +74,62 @@ def main():
     )
     print(f"📊 Created experiment ID: {experiment_id}")
 
-    hyperparams = config["dqn_hyperparameters"]
+    algorithm = config["experiment"]["algorithm"]
+    if algorithm == "PPO":
+        hyperparams = config["ppo_hyperparameters"]
+    elif algorithm == "DQN":
+        hyperparams = config["dqn_hyperparameters"]
+    else:
+        raise ValueError("The only supported algs are DQN or PPO")
     db_logger.log_hyperparameters(experiment_id, hyperparams)
 
-    print("🎮 Creating Mario Environment")
-    env = make_mario_env(
-        game_version=config["environment"]["game"], action_space=SIMPLE_MOVEMENT
-    )
+    print("🎮 Creating Mario Environment(s)")
+    if algorithm == "PPO":
+        env = make_vec_mario_env(
+            game_version=config["environment"]["game"],
+            action_space=SIMPLE_MOVEMENT,
+            n_envs=hyperparams["n_envs"],
+        )
+    elif algorithm == "DQN":
+        env = make_mario_env(
+            game_version=config["environment"]["game"], action_space=SIMPLE_MOVEMENT
+        )
+    else:
+        raise ValueError("The only supported algs are DQN or PPO")
 
-    print("🤖 Starting DQN Agent")
-    model = DQN(
-        policy=config["dqn_hyperparameters"]["policy"],
-        env=env,
-        learning_rate=config["dqn_hyperparameters"]["learning_rate"],
-        buffer_size=config["dqn_hyperparameters"]["buffer_size"],
-        learning_starts=config["dqn_hyperparameters"]["learning_starts"],
-        batch_size=config["dqn_hyperparameters"]["batch_size"],
-        gamma=config["dqn_hyperparameters"]["gamma"],
-        target_update_interval=config["dqn_hyperparameters"]["target_update_interval"],
-        exploration_fraction=config["dqn_hyperparameters"]["exploration_fraction"],
-        exploration_final_eps=config["dqn_hyperparameters"]["exploration_final_eps"],
-        verbose=1,
-    )
-    print("✅ DQN Agent Created!")
+    print(f"🤖 Creating {algorithm} Agent")
+    if algorithm == "PPO":
+        model = PPO(
+            policy=hyperparams["policy"],
+            env=env,
+            learning_rate=hyperparams["learning_rate"],
+            batch_size=hyperparams["batch_size"],
+            gamma=hyperparams["gamma"],
+            n_steps=hyperparams["n_steps"],
+            n_epochs=hyperparams["n_epochs"],
+            clip_range=hyperparams["clip_range"],
+            ent_coef=hyperparams["ent_coef"],
+            gae_lambda=hyperparams["gae_lambda"],
+            verbose=1,
+        )
+    elif algorithm == "DQN":
+        model = DQN(
+            policy=hyperparams["policy"],
+            env=env,
+            learning_rate=hyperparams["learning_rate"],
+            buffer_size=hyperparams["buffer_size"],
+            learning_starts=hyperparams["learning_starts"],
+            batch_size=hyperparams["batch_size"],
+            gamma=hyperparams["gamma"],
+            target_update_interval=hyperparams["target_update_interval"],
+            exploration_fraction=hyperparams["exploration_fraction"],
+            exploration_final_eps=hyperparams["exploration_final_eps"],
+            verbose=1,
+        )
+    else:
+        raise ValueError("The only supported algs are DQN or PPO")
+
+    print(f"✅ {algorithm} Agent Created!")
 
     print("📡 Setting Up Callbacks")
     checkpoint_callback = CheckpointCallback(

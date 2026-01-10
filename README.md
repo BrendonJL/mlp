@@ -30,6 +30,7 @@ mlp/
 │   ├── agents/          # RL agent implementations (planned)
 │   ├── environments/    # Game environment wrappers + preprocessing
 │   │   ├── mario_env.py
+│   │   ├── vec_mario_env.py
 │   │   └── wrappers.py
 │   ├── models/          # Neural network architectures (planned)
 │   ├── training/        # Training loops and callbacks
@@ -39,7 +40,8 @@ mlp/
 │       ├── config_loader.py
 │       └── db_logger.py
 ├── configs/             # Hyperparameter configurations (YAML)
-│   └── dqn_baseline.yaml
+│   ├── dqn_baseline.yaml
+│   └── ppo_baseline.yaml
 ├── models/              # Saved model checkpoints
 │   └── dqn_baseline_world1-1_final.zip
 ├── notebooks/           # Jupyter analysis notebooks
@@ -102,7 +104,9 @@ mlp/
 - [x] Train deep RL agent with neural networks (CnnPolicy) ✅
 - [x] Implement reproducible experiment configurations (YAML) ✅
 - [x] Build evaluation and analysis pipelines ✅
-- [ ] Implement advanced RL algorithms (PPO, curriculum learning)
+- [x] Implement PPO with parallel environments ✅
+- [ ] Reward shaping and hyperparameter tuning
+- [ ] Imitation learning techniques
 - [ ] Deploy containerized ML applications
 - [ ] Apply ML to real-world security problems
 
@@ -194,9 +198,24 @@ Production-quality baseline established:
 - Built complete ML workflow: train → evaluate → analyze → iterate
 - Achieved reproducibility with git hash + version tracking
 
+**🔄 Phase 4: PPO Baseline & Comparison** (In Progress - Jan 10, 2026)
+
+Implementing PPO with parallel environments for direct comparison with DQN:
+- ✅ PPO configuration with 8 parallel environments
+- ✅ Vectorized environment wrapper (SubprocVecEnv)
+- ✅ Multi-algorithm training script (supports DQN and PPO)
+- 🔄 Full 2M timestep PPO training run (in progress)
+
+**Expected Benefits:**
+- ~4-5 hour training time (vs 12 hours for DQN) thanks to parallel data collection
+- On-policy learning may handle platformer dynamics better
+- Direct comparison: same timesteps, different algorithms
+
 See [ProjectDocumentation.md](docs/ProjectDocumentation.md) for complete timeline and detailed implementation phases.
 
 ### Recent Highlights
+
+**Jan 10, 2026** - **PPO Implementation!** 🔄 Implemented PPO with 8 parallel environments for direct comparison with DQN. Built vectorized environment wrapper using SubprocVecEnv for true multiprocessing parallelism. Updated training script to support multiple algorithms dynamically. Tested pipeline with 10k and 50k timestep runs - CPU utilization at 82-95% with 8 envs (optimal sweet spot). Key learnings: on-policy vs off-policy data collection, actor-critic architecture, PPO health metrics (approx_kl, clip_fraction, explained_variance). **2M timestep training run in progress!** Expected completion: ~4-5 hours (vs 12 hours for DQN). 🚀
 
 **Jan 4, 2026** - **PHASE 3 COMPLETE!** 🎉 Agent achieved 5.3x improvement over random baseline! Built evaluation script and comprehensive analysis notebook with interactive visualizations. Discovered agent learned meaningful strategies (rightward movement, enemy interaction, coin collection) but still struggles with level completion (0% success rate - reaches 31% of level). Key technical learning: deterministic vs stochastic policy evaluation. Fixed 13 additional bugs during evaluation development. Total Phase 3 impact: 29 bugs fixed, 500+ lines of code, complete ML workflow established (train → evaluate → analyze). Recorded gameplay video showing trained agent in action. **Phase 3 complete in 3 days!** 🚀
 

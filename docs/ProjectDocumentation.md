@@ -26,7 +26,8 @@ The ultimate goal extends beyond Mario: I'm building skills and establishing wor
 mlp/
 ├── .claude/              # Claude Code settings
 ├── configs/              # Hyperparameter configurations (YAML files)
-│   └── dqn_baseline.yaml
+│   ├── dqn_baseline.yaml
+│   └── ppo_baseline.yaml
 ├── data/                 # Training logs, gameplay videos, episode data
 │   ├── logs/
 │   └── videos/
@@ -53,6 +54,7 @@ mlp/
 │   ├── agents/          # RL agent implementations (DQN, PPO) (planned)
 │   ├── environments/    # Gym environment wrappers and preprocessing
 │   │   ├── mario_env.py
+│   │   ├── vec_mario_env.py
 │   │   └── wrappers.py
 │   ├── models/          # Neural network architectures (planned)
 │   ├── preprocessing/   # Frame processing utilities (planned)
@@ -216,60 +218,101 @@ Attempted multiple approaches (RecordVideo wrapper, manual imageio frame collect
 - **Partial learning in RL**: Agents can improve significantly (5x reward) without completing the task (0% success rate)
 - **Visualization impact**: Interactive plots (Plotly) reveal learning curves and performance trends missed by raw statistics
 
-### Phase 4: Advanced Techniques (Weeks 6-9, Feb-Mar 2026)
+### Phase 4: PPO Baseline & Comparison 🔄 IN PROGRESS (Jan 10, 2026)
 
-- [ ] Implement PPO algorithm (often better for platformers) 📅 2026-02-05
-- [ ] Experiment with curriculum learning: 📅 2026-02-12
-  - [ ] Train on easier levels first 📅 2026-02-09
-  - [ ] Gradually increase difficulty 📅 2026-02-12
-- [ ] Implement reward shaping: 📅 2026-02-19
-  - [ ] Reward for distance traveled 📅 2026-02-15
-  - [ ] Penalty for time spent idle 📅 2026-02-17
-  - [ ] Bonus for collecting coins/powerups 📅 2026-02-19
-- [ ] Add sophisticated preprocessing: 📅 2026-02-26
-  - [ ] Attention mechanisms 📅 2026-02-23
-  - [ ] State representation learning 📅 2026-02-26
-- [ ] Systematic hyperparameter tuning: 📅 2026-03-05
-  - [ ] Learning rate schedules 📅 2026-03-01
-  - [ ] Network architecture variations 📅 2026-03-03
-  - [ ] Exploration/exploitation balance 📅 2026-03-05
-- [ ] A/B testing framework for comparing configurations 📅 2026-03-08
+- [x] Learn PPO concepts (on-policy, actor-critic, advantage estimation) ✅ 2026-01-10
+- [x] Create PPO configuration file (`configs/ppo_baseline.yaml`) ✅ 2026-01-10
+- [x] Update training script to support multiple algorithms ✅ 2026-01-10
+- [x] Implement vectorized environment wrapper (`src/environments/vec_mario_env.py`) ✅ 2026-01-10
+- [x] Add SubprocVecEnv for parallel environment execution (8 envs) ✅ 2026-01-10
+- [x] Test PPO training pipeline with short runs (10k, 50k timesteps) ✅ 2026-01-10
+- [ ] Run full PPO training (2M timesteps) 🔄 IN PROGRESS
+- [ ] Compare PPO vs DQN performance (same timesteps, different algorithms)
+- [ ] Create comparison notebook with visualizations
+- [ ] Document PPO vs DQN learnings
 
-### Phase 5: Production & Analysis (Weeks 10-12, Mar 2026)
+**Phase 4 Progress: 6/10 tasks complete (60%)**
 
-- [ ] Containerize training environment with Docker: 📅 2026-03-15
-  - [ ] Multi-stage build (training vs. inference) 📅 2026-03-12
-  - [ ] GPU support configuration 📅 2026-03-15
-- [ ] Set up GitHub Actions workflows: 📅 2026-03-22
-  - [ ] Run tests on pull requests 📅 2026-03-18
-  - [ ] Code quality checks (black, ruff, mypy) 📅 2026-03-19
-  - [ ] Automated model evaluation 📅 2026-03-22
-- [ ] Create comprehensive data analysis dashboards: 📅 2026-03-29
-  - [ ] Training stability analysis 📅 2026-03-25
-  - [ ] Hyperparameter correlation studies 📅 2026-03-27
-  - [ ] Performance comparison across algorithms 📅 2026-03-29
-- [ ] Build model evaluation pipeline: 📅 2026-04-03
-  - [ ] Standardized test episodes 📅 2026-03-31
-  - [ ] Statistical significance testing 📅 2026-04-02
-  - [ ] Performance benchmarking 📅 2026-04-03
-- [ ] Write comprehensive documentation: 📅 2026-04-10
-  - [ ] API documentation 📅 2026-04-05
-  - [ ] Training guides 📅 2026-04-07
-  - [ ] Architecture decisions 📅 2026-04-09
-  - [ ] Lessons learned 📅 2026-04-10
+**Completed Artifacts:**
+- `configs/ppo_baseline.yaml` - PPO experiment configuration (8 parallel envs, 1024 n_steps)
+- `src/environments/vec_mario_env.py` - Vectorized environment wrapper using SubprocVecEnv
+- `src/training/train.py` - Updated with multi-algorithm support (PPO + DQN)
 
-### Phase 6: Extensions (Ongoing, Apr 2026+)
+**Key Learnings (so far):**
+- **PPO vs DQN architecture**: On-policy (fresh data) vs off-policy (replay buffer)
+- **Actor-critic**: PPO learns policy + value function; advantage = Q(s,a) - V(s)
+- **Parallel environments**: SubprocVecEnv enables true multiprocessing parallelism
+- **CPU utilization sweet spot**: 8 envs at 82-95% CPU - leaves headroom for gradient updates
+- **PPO training metrics**: approx_kl, clip_fraction, explained_variance indicate training health
 
-- [ ] Expand to other games: 📅 2026-04-15
-  - [ ] Sonic the Hedgehog 📅 2026-04-15
-  - [ ] Contra 📅 2026-04-20
-  - [ ] Custom environments 📅 2026-04-25
-- [ ] Implement curiosity-driven exploration 📅 2026-05-01
-- [ ] Multi-agent training (competitive/cooperative) 📅 2026-05-10
-- [ ] Transfer learning between game levels 📅 2026-05-20
-- [ ] Model distillation (compress large models) 📅 2026-06-01
-- [ ] Real-time inference optimization 📅 2026-06-10
-- [ ] Web dashboard for live agent monitoring 📅 2026-06-20
+### Phase 5: Reward Shaping & Hyperparameter Tuning (Jan-Feb 2026)
+
+- [ ] Implement custom reward wrapper:
+  - [ ] Bonus for distance traveled (encourage forward progress)
+  - [ ] Penalty for time spent idle (discourage standing still)
+  - [ ] Reward for collecting coins/powerups
+  - [ ] Penalty for losing lives
+- [ ] Systematic hyperparameter tuning:
+  - [ ] Learning rate schedules
+  - [ ] Network architecture variations
+  - [ ] Exploration/exploitation balance (entropy coefficient)
+  - [ ] Batch size and n_steps optimization
+- [ ] Experiment with curriculum learning:
+  - [ ] Train on easier levels first
+  - [ ] Gradually increase difficulty
+- [ ] A/B testing framework for comparing configurations
+- [ ] Goal: Achieve level completion (reach the flag!)
+
+### Phase 6: Imitation Learning (Feb-Mar 2026)
+
+- [ ] Research imitation learning approaches:
+  - [ ] Behavioral Cloning (BC)
+  - [ ] DAgger (Dataset Aggregation)
+  - [ ] GAIL (Generative Adversarial Imitation Learning)
+- [ ] Collect expert demonstrations:
+  - [ ] Manual gameplay recording
+  - [ ] State-action pair extraction
+- [ ] Implement imitation learning pipeline:
+  - [ ] Pre-train policy from demonstrations
+  - [ ] Fine-tune with RL (hybrid approach)
+- [ ] Compare pure RL vs imitation-assisted learning
+- [ ] Document effectiveness of human demonstrations
+
+### Phase 7: Production & Analysis (Mar-Apr 2026)
+
+- [ ] Containerize training environment with Docker:
+  - [ ] Multi-stage build (training vs. inference)
+  - [ ] GPU support configuration
+- [ ] Set up GitHub Actions workflows:
+  - [ ] Run tests on pull requests
+  - [ ] Code quality checks (black, ruff, mypy)
+  - [ ] Automated model evaluation
+- [ ] Create comprehensive data analysis dashboards:
+  - [ ] Training stability analysis
+  - [ ] Hyperparameter correlation studies
+  - [ ] Performance comparison across algorithms
+- [ ] Build model evaluation pipeline:
+  - [ ] Standardized test episodes
+  - [ ] Statistical significance testing
+  - [ ] Performance benchmarking
+- [ ] Write comprehensive documentation:
+  - [ ] API documentation
+  - [ ] Training guides
+  - [ ] Architecture decisions
+  - [ ] Lessons learned
+
+### Phase 8: Extensions (Ongoing, Apr 2026+)
+
+- [ ] Expand to other games:
+  - [ ] Sonic the Hedgehog
+  - [ ] Contra
+  - [ ] Custom environments
+- [ ] Implement curiosity-driven exploration
+- [ ] Multi-agent training (competitive/cooperative)
+- [ ] Transfer learning between game levels
+- [ ] Model distillation (compress large models)
+- [ ] Real-time inference optimization
+- [ ] Web dashboard for live agent monitoring
 
 ## Future Applications
 
