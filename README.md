@@ -209,7 +209,8 @@ Implemented PPO with parallel environments - discovered critical issues:
 ### 🎮 Watch the Trained Agent Play
 
  <video src="https://github.com/user-attachments/assets/4f52663e-d855-44b7-b152-37f1d7b72339" controls></video>
- *PPO Agent Epicly Failing to Play Mario 
+ 
+ *PPO Agent Epicly Failing to Play Mario*
 
 **Key Discovery: Policy Collapse**
 - 800k checkpoint works (moves right, x=353)
