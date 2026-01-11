@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))  # noqa: E402
 
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT  # noqa: E402
-from stable_baselines3 import DQN  # noqa: E402
+from stable_baselines3 import DQN, PPO  # noqa: E402
 
 from src.environments.mario_env import make_mario_env  # noqa: E402
 
@@ -34,13 +34,24 @@ def parse_args():
         help="Number of Evaluation Episodes to run (default: 10)",
     )
 
+    parser.add_argument(
+        "--algorithm",
+        type=str,
+        default="PPO",
+        help="Which RL Alg Would you Like to Use?",
+    )
+
     return parser.parse_args()
 
 
-def load_model(model_path):
-    """Load a trained DQN model from file."""
+def load_model(model_path, algorithm):
     print(f"🤖 Loading model from: {model_path}")
-    model = DQN.load(model_path)
+    if algorithm == "PPO":
+        model = PPO.load(model_path)
+    elif algorithm == "DQN":
+        model = DQN.load(model_path)
+    else:
+        model = PPO.load(model_path)
     print("✅ Model loaded successfully!")
     return model
 
@@ -86,7 +97,7 @@ def evaluate_episode(model, env, episode_num):
     # Episode loop - agent plays until done
     # Timeout at 5000 steps (reasonable for trained agent)
     while not done and steps < 5000:
-        action, _states = model.predict(obs, deterministic=False)
+        action, _states = model.predict(obs, deterministic=True)
         action = int(action)  # Convert numpy array to Python int
         obs, reward, terminated, truncated, info = env.step(action)
         total_reward += reward
@@ -126,7 +137,7 @@ def main():
     args = parse_args()
 
     # Load model
-    model = load_model(args.model_path)
+    model = load_model(args.model_path, args.algorithm)
 
     # Create environment
     env = create_eval_environment()
@@ -214,6 +225,21 @@ def main():
     print("\n   Random max distance: 434 pixels")
     print(f"   Trained max distance: {max_distance} pixels")
     print(f"   Improvement: {(max_distance/434):.1f}x further!")
+
+    # Comparison to DQN (from Phase 3)
+    print("\n📊 Comparison to DQN Baseline (2M steps):")
+    print("   DQN avg reward: ~1920")
+    print(f"   PPO avg reward: {avg_reward:.1f}")
+    if avg_reward > 1920:
+        print(f"   🎉 PPO is {(avg_reward/1920):.2f}x better!")
+    else:
+        print(f"   DQN was {(1920/avg_reward):.2f}x better")
+    print("\n   DQN avg distance: ~1024 pixels")
+    print(f"   PPO avg distance: {avg_distance:.1f} pixels")
+    print("\n   DQN max distance: ~1673 pixels")
+    print(f"   PPO max distance: {max_distance} pixels")
+    print("\n   DQN success rate: 0%")
+    print(f"   PPO success rate: {success_rate:.1f}%")
 
     # Close environment
     env.close()

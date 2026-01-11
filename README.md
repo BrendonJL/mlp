@@ -198,24 +198,32 @@ Production-quality baseline established:
 - Built complete ML workflow: train → evaluate → analyze → iterate
 - Achieved reproducibility with git hash + version tracking
 
-**🔄 Phase 4: PPO Baseline & Comparison** (In Progress - Jan 10, 2026)
+**✅ Phase 4: PPO Baseline & Comparison** (Complete - Jan 10-11, 2026)
 
-Implementing PPO with parallel environments for direct comparison with DQN:
-- ✅ PPO configuration with 8 parallel environments
+Implemented PPO with parallel environments - discovered critical issues:
+- ✅ PPO configuration with parallel environments
 - ✅ Vectorized environment wrapper (SubprocVecEnv)
 - ✅ Multi-algorithm training script (supports DQN and PPO)
-- 🔄 Full 2M timestep PPO training run (in progress)
+- ⚠️ Training completed but **policy collapsed** after 800k steps
 
-**Expected Benefits:**
-- ~4-5 hour training time (vs 12 hours for DQN) thanks to parallel data collection
-- On-policy learning may handle platformer dynamics better
-- Direct comparison: same timesteps, different algorithms
+**Key Discovery: Policy Collapse**
+- 800k checkpoint works (moves right, x=353)
+- Final 2M model is broken (runs backwards into corner)
+- Root cause: Callbacks only logged env[0], missing 7/8 of episode data
+- No early warning system to detect collapse
+
+**Lessons Learned:**
+- 8 parallel envs at 90% CPU caused thermal throttling (10.2 hrs vs expected 4-5)
+- PPO hyperparameters (LR=0.0001, entropy=0.01) likely too aggressive
+- Monitoring infrastructure is critical - can't improve what you can't measure
 
 See [ProjectDocumentation.md](docs/ProjectDocumentation.md) for complete timeline and detailed implementation phases.
 
 ### Recent Highlights
 
-**Jan 10, 2026** - **PPO Implementation!** 🔄 Implemented PPO with 8 parallel environments for direct comparison with DQN. Built vectorized environment wrapper using SubprocVecEnv for true multiprocessing parallelism. Updated training script to support multiple algorithms dynamically. Tested pipeline with 10k and 50k timestep runs - CPU utilization at 82-95% with 8 envs (optimal sweet spot). Key learnings: on-policy vs off-policy data collection, actor-critic architecture, PPO health metrics (approx_kl, clip_fraction, explained_variance). **2M timestep training run in progress!** Expected completion: ~4-5 hours (vs 12 hours for DQN). 🚀
+**Jan 11, 2026** - **Phase 4 Complete (with documented failure)** 📚 Analyzed PPO training results and discovered policy collapse. Agent learned correctly at 800k steps (moves right, x=353) but catastrophically forgot by 2M steps (runs backwards into corner). Identified two bugs: WandbCallback and DatabaseCallback only check `dones[0]`, missing 7/8 of episodes with vectorized environments. 8 parallel envs at 90% CPU caused thermal throttling. Valuable lesson: proper monitoring is essential - we couldn't detect collapse in real-time. **Phase 5 will fix callbacks first, then tune hyperparameters and add reward shaping.** 📊
+
+**Jan 10, 2026** - **PPO Implementation!** 🔄 Implemented PPO with 8 parallel environments for direct comparison with DQN. Built vectorized environment wrapper using SubprocVecEnv for true multiprocessing parallelism. Updated training script to support multiple algorithms dynamically. Tested pipeline with 10k and 50k timestep runs. Key learnings: on-policy vs off-policy data collection, actor-critic architecture, PPO health metrics (approx_kl, clip_fraction, explained_variance). 🚀
 
 **Jan 4, 2026** - **PHASE 3 COMPLETE!** 🎉 Agent achieved 5.3x improvement over random baseline! Built evaluation script and comprehensive analysis notebook with interactive visualizations. Discovered agent learned meaningful strategies (rightward movement, enemy interaction, coin collection) but still struggles with level completion (0% success rate - reaches 31% of level). Key technical learning: deterministic vs stochastic policy evaluation. Fixed 13 additional bugs during evaluation development. Total Phase 3 impact: 29 bugs fixed, 500+ lines of code, complete ML workflow established (train → evaluate → analyze). Recorded gameplay video showing trained agent in action. **Phase 3 complete in 3 days!** 🚀
 

@@ -218,7 +218,7 @@ Attempted multiple approaches (RecordVideo wrapper, manual imageio frame collect
 - **Partial learning in RL**: Agents can improve significantly (5x reward) without completing the task (0% success rate)
 - **Visualization impact**: Interactive plots (Plotly) reveal learning curves and performance trends missed by raw statistics
 
-### Phase 4: PPO Baseline & Comparison 🔄 IN PROGRESS (Jan 10, 2026)
+### Phase 4: PPO Baseline & Comparison ✅ COMPLETE (Jan 10-11, 2026)
 
 - [x] Learn PPO concepts (on-policy, actor-critic, advantage estimation) ✅ 2026-01-10
 - [x] Create PPO configuration file (`configs/ppo_baseline.yaml`) ✅ 2026-01-10
@@ -226,37 +226,69 @@ Attempted multiple approaches (RecordVideo wrapper, manual imageio frame collect
 - [x] Implement vectorized environment wrapper (`src/environments/vec_mario_env.py`) ✅ 2026-01-10
 - [x] Add SubprocVecEnv for parallel environment execution (8 envs) ✅ 2026-01-10
 - [x] Test PPO training pipeline with short runs (10k, 50k timesteps) ✅ 2026-01-10
-- [ ] Run full PPO training (2M timesteps) 🔄 IN PROGRESS
-- [ ] Compare PPO vs DQN performance (same timesteps, different algorithms)
-- [ ] Create comparison notebook with visualizations
-- [ ] Document PPO vs DQN learnings
+- [x] Run full PPO training (2M timesteps) ✅ 2026-01-11 (policy collapsed - see notes)
+- [x] Compare PPO vs DQN performance ✅ 2026-01-11 (DQN significantly better)
+- [~] Create comparison notebook with visualizations ⚠️ Deferred (no training data logged)
+- [x] Document PPO vs DQN learnings ✅ 2026-01-11
 
-**Phase 4 Progress: 6/10 tasks complete (60%)**
+**Phase 4 Progress: COMPLETE (with documented failure)**
+
+**Critical Issue Discovered: Policy Collapse**
+PPO training ran for 2M steps (~10.2 hours) but the policy collapsed after 800k steps:
+- 800k checkpoint: Agent moves right, reaches x=353 (reasonable early learning)
+- 1.6M checkpoint: Agent retreats after initial progress
+- 2M final: Agent immediately runs backwards into corner (degenerate policy)
+
+**Root Causes Identified:**
+1. **Callback bug**: `WandbCallback` and `DatabaseCallback` only checked `dones[0]` - missing 7/8 of episode completions with 8 parallel environments
+2. **No early warning**: Without episode metrics, couldn't detect collapse in real-time
+3. **Too many parallel envs**: 8 environments at 82-95% CPU caused thermal throttling and longer training time (10.2 hours vs expected 4-5)
+4. **Hyperparameters likely too aggressive**: Learning rate 0.0001, entropy 0.01 may have caused instability
 
 **Completed Artifacts:**
-- `configs/ppo_baseline.yaml` - PPO experiment configuration (8 parallel envs, 1024 n_steps)
+- `configs/ppo_baseline.yaml` - PPO experiment configuration
 - `src/environments/vec_mario_env.py` - Vectorized environment wrapper using SubprocVecEnv
 - `src/training/train.py` - Updated with multi-algorithm support (PPO + DQN)
+- `models/ppo_baseline_world1-1_800000_steps.zip` - Best PPO checkpoint (before collapse)
+- `models/ppo_baseline_world1-1_final.zip` - Collapsed policy (for reference)
 
-**Key Learnings (so far):**
+**Key Learnings:**
 - **PPO vs DQN architecture**: On-policy (fresh data) vs off-policy (replay buffer)
 - **Actor-critic**: PPO learns policy + value function; advantage = Q(s,a) - V(s)
 - **Parallel environments**: SubprocVecEnv enables true multiprocessing parallelism
-- **CPU utilization sweet spot**: 8 envs at 82-95% CPU - leaves headroom for gradient updates
+- **CPU overload**: 8 envs at 90%+ CPU was too aggressive - caused thermal throttling
 - **PPO training metrics**: approx_kl, clip_fraction, explained_variance indicate training health
+- **Policy collapse**: PPO can catastrophically forget learned behavior if training continues too long
+- **Vectorized callback bug**: Standard callbacks check only `[0]` index - must iterate over all envs
+- **Evaluation determinism**: PPO prefers `deterministic=True` (unlike DQN's `deterministic=False`)
+- **Monitoring is critical**: Without proper logging, policy collapse went undetected for hours
+- **Value loss spikes**: Periodic spikes to 30-50 were warning signs of instability
 
-### Phase 5: Reward Shaping & Hyperparameter Tuning (Jan-Feb 2026)
+### Phase 5: Infrastructure Fixes, Reward Shaping & Hyperparameter Tuning (Jan 2026)
 
+**Part A: Fix Infrastructure (Prerequisites)**
+- [ ] Fix callbacks for vectorized environments:
+  - [ ] Update `WandbCallback` to iterate over all `n_envs`
+  - [ ] Update `DatabaseCallback` to iterate over all `n_envs`
+  - [ ] Test callbacks with short PPO run to verify logging works
+- [ ] Reduce parallel environments (8 → 4) to prevent CPU throttling
+- [ ] Verify episode metrics appear in W&B and PostgreSQL
+
+**Part B: Hyperparameter Tuning**
+- [ ] Lower learning rate: 0.0001 → 0.00003
+- [ ] Increase entropy coefficient: 0.01 → 0.02
+- [ ] Consider early stopping based on evaluation performance
+- [ ] Learning rate schedules
+- [ ] Batch size and n_steps optimization
+
+**Part C: Reward Shaping**
 - [ ] Implement custom reward wrapper:
   - [ ] Bonus for distance traveled (encourage forward progress)
   - [ ] Penalty for time spent idle (discourage standing still)
   - [ ] Reward for collecting coins/powerups
   - [ ] Penalty for losing lives
-- [ ] Systematic hyperparameter tuning:
-  - [ ] Learning rate schedules
-  - [ ] Network architecture variations
-  - [ ] Exploration/exploitation balance (entropy coefficient)
-  - [ ] Batch size and n_steps optimization
+
+**Part D: Advanced Techniques**
 - [ ] Experiment with curriculum learning:
   - [ ] Train on easier levels first
   - [ ] Gradually increase difficulty
