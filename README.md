@@ -206,6 +206,11 @@ Implemented PPO with parallel environments - discovered critical issues:
 - ✅ Multi-algorithm training script (supports DQN and PPO)
 - ⚠️ Training completed but **policy collapsed** after 800k steps
 
+### 🎮 Watch the Trained Agent Play
+
+ <video src="https://github.com/user-attachments/assets/4f52663e-d855-44b7-b152-37f1d7b72339" controls></video>
+
+
 **Key Discovery: Policy Collapse**
 - 800k checkpoint works (moves right, x=353)
 - Final 2M model is broken (runs backwards into corner)
