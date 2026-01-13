@@ -209,7 +209,7 @@ Implemented PPO with parallel environments - discovered critical issues:
 ### 🎮 Watch the Trained Agent Play
 
  <video src="https://github.com/user-attachments/assets/4f52663e-d855-44b7-b152-37f1d7b72339" controls></video>
- 
+
  *PPO Agent Epicly Failing to Play Mario*
 
 **Key Discovery: Policy Collapse**
@@ -225,9 +225,48 @@ Implemented PPO with parallel environments - discovered critical issues:
 
 See [ProjectDocumentation.md](docs/ProjectDocumentation.md) for complete timeline and detailed implementation phases.
 
+**⏳ Phase 5: Infrastructure Fixes & Reward Shaping** (In Progress - Jan 11-12, 2026)
+
+Fixed all infrastructure issues from Phase 4 and implemented comprehensive reward shaping:
+- ✅ Fixed callbacks to iterate over ALL vectorized environments
+- ✅ Added `VecMonitor` for proper episode tracking
+- ✅ Fixed gym/gymnasium API compatibility in `CompatibilityWrapper`
+- ✅ Reduced parallel envs (8 → 4) to prevent CPU throttling
+- ✅ Tuned hyperparameters (lower LR, higher entropy)
+- ✅ Created `RewardShapingWrapper` with:
+  - Forward/backward/idle rewards and penalties
+  - Death penalty (-50)
+  - Early termination when stuck (150 steps)
+  - Milestone bonuses (650, 900, 1200, 1600, 2000 x-positions)
+- ✅ Full 2M PPO v2 training run completed
+- ✅ Comparison notebook created (`notebooks/03_ppo_vs_dqn_comparison.ipynb`)
+
+**PPO v2 Training Results:**
+
+| Metric | DQN (Phase 3) | PPO v2 (Phase 5) |
+|--------|---------------|------------------|
+| Episodes | 785 | 2,197 |
+| Avg Distance | 1,024 px | 687.7 px |
+| Max Distance | 2,743 px | 2,226 px |
+| Training Time | ~12 hrs | ~5.5 hrs |
+
+**Key Discovery: The Tall Pipe Problem**
+- Agent consistently gets stuck at x ≈ 700 (first tall obstacle)
+- Mario requires **variable jump heights** (hold button longer = jump higher)
+- With discrete actions, agent must learn to **chain multiple jump actions**
+- DQN's replay buffer remembers rare successful jumps; PPO discards them immediately
+
+**Next Steps:**
+- Add granular milestones around x=700 obstacle
+- Increase stuck timeout (150 → 300 steps)
+- Consider `COMPLEX_MOVEMENT` action space
+- Launch 5M step training run
+
 ### Recent Highlights
 
-**Jan 11, 2026** - **Phase 4 Complete (with documented failure)** 📚 Analyzed PPO training results and discovered policy collapse. Agent learned correctly at 800k steps (moves right, x=353) but catastrophically forgot by 2M steps (runs backwards into corner). Identified two bugs: WandbCallback and DatabaseCallback only check `dones[0]`, missing 7/8 of episodes with vectorized environments. 8 parallel envs at 90% CPU caused thermal throttling. Valuable lesson: proper monitoring is essential - we couldn't detect collapse in real-time. **Phase 5 will fix callbacks first, then tune hyperparameters and add reward shaping.** 📊
+**Jan 12, 2026** - **PPO v2 Evaluation Complete!** 📊 Analyzed full 2M step PPO v2 training run. Results: 2,197 episodes, avg distance 687px, max 2,226px. Surprising finding: DQN outperformed PPO despite reward shaping! Root cause identified: agent stuck at tall pipe obstacle (x≈700) - can't learn variable jump heights with discrete actions. DQN's replay buffer remembers rare successful jumps while PPO discards them. Created comprehensive comparison notebook with visualizations. Next: hyperparameter tuning and 5M step run! 🔬
+
+**Jan 11, 2026** - **Phase 5 Major Progress!** 🚀 Fixed ALL infrastructure bugs from Phase 4. Callbacks now properly iterate over all vectorized environments. Added VecMonitor for episode tracking. Created comprehensive RewardShapingWrapper with forward/backward bonuses, idle/death penalties, early termination, and milestone bonuses. Agent was stuck at x=594 - added milestone at x=650 to incentivize progress. Episode frequency improved ~10x (from 1 per 32k steps to 3 per 9k steps). Full 2M PPO v2 training run launched overnight. Tomorrow: evaluation and comparison notebook! 🎮
 
 **Jan 10, 2026** - **PPO Implementation!** 🔄 Implemented PPO with 8 parallel environments for direct comparison with DQN. Built vectorized environment wrapper using SubprocVecEnv for true multiprocessing parallelism. Updated training script to support multiple algorithms dynamically. Tested pipeline with 10k and 50k timestep runs. Key learnings: on-policy vs off-policy data collection, actor-critic architecture, PPO health metrics (approx_kl, clip_fraction, explained_variance). 🚀
 

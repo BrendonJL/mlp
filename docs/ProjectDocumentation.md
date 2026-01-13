@@ -264,36 +264,50 @@ PPO training ran for 2M steps (~10.2 hours) but the policy collapsed after 800k 
 - **Monitoring is critical**: Without proper logging, policy collapse went undetected for hours
 - **Value loss spikes**: Periodic spikes to 30-50 were warning signs of instability
 
-### Phase 5: Infrastructure Fixes, Reward Shaping & Hyperparameter Tuning (Jan 2026)
+### Phase 5: Infrastructure Fixes, Reward Shaping & Hyperparameter Tuning ⏳ IN PROGRESS (Jan 11, 2026)
 
-**Part A: Fix Infrastructure (Prerequisites)**
-- [ ] Fix callbacks for vectorized environments:
-  - [ ] Update `WandbCallback` to iterate over all `n_envs`
-  - [ ] Update `DatabaseCallback` to iterate over all `n_envs`
-  - [ ] Test callbacks with short PPO run to verify logging works
-- [ ] Reduce parallel environments (8 → 4) to prevent CPU throttling
-- [ ] Verify episode metrics appear in W&B and PostgreSQL
+**Part A: Fix Infrastructure (Prerequisites)** ✅ COMPLETE
+- [x] Fix callbacks for vectorized environments:
+  - [x] Update `WandbCallback` to iterate over all `n_envs` ✅ 2026-01-11
+  - [x] Update `DatabaseCallback` to iterate over all `n_envs` ✅ 2026-01-11
+  - [x] Test callbacks with short PPO run to verify logging works ✅ 2026-01-11
+- [x] Add `VecMonitor` wrapper for episode tracking ✅ 2026-01-11
+- [x] Fix `CompatibilityWrapper.step()` for gym/gymnasium API conversion ✅ 2026-01-11
+- [x] Reduce parallel environments (8 → 4) to prevent CPU throttling ✅ 2026-01-11
+- [x] Verify episode metrics appear in W&B and PostgreSQL ✅ 2026-01-11
 
-**Part B: Hyperparameter Tuning**
-- [ ] Lower learning rate: 0.0001 → 0.00003
-- [ ] Increase entropy coefficient: 0.01 → 0.02
-- [ ] Consider early stopping based on evaluation performance
-- [ ] Learning rate schedules
-- [ ] Batch size and n_steps optimization
+**Part B: Hyperparameter Tuning** ✅ COMPLETE
+- [x] Lower learning rate: 0.0001 → 0.00003 ✅ 2026-01-11
+- [x] Increase entropy coefficient: 0.01 → 0.02 ✅ 2026-01-11
+- [x] Created `configs/ppo_v2.yaml` with tuned parameters ✅ 2026-01-11
 
-**Part C: Reward Shaping**
-- [ ] Implement custom reward wrapper:
-  - [ ] Bonus for distance traveled (encourage forward progress)
-  - [ ] Penalty for time spent idle (discourage standing still)
-  - [ ] Reward for collecting coins/powerups
-  - [ ] Penalty for losing lives
+**Part C: Reward Shaping** ✅ COMPLETE
+- [x] Implement `RewardShapingWrapper`:
+  - [x] Forward bonus (+0.1 per pixel moved right) ✅ 2026-01-11
+  - [x] Backward penalty (-0.1 per pixel moved left) ✅ 2026-01-11
+  - [x] Idle penalty (-0.2 per step standing still) ✅ 2026-01-11
+  - [x] Death penalty (-50 for losing a life) ✅ 2026-01-11
+  - [x] Early termination (episode ends after 150 stuck steps) ✅ 2026-01-11
+  - [x] Milestone bonuses (650→+150, 900→+100, 1200→+150, 1600→+200, 2000→+250) ✅ 2026-01-11
 
-**Part D: Advanced Techniques**
-- [ ] Experiment with curriculum learning:
-  - [ ] Train on easier levels first
-  - [ ] Gradually increase difficulty
-- [ ] A/B testing framework for comparing configurations
-- [ ] Goal: Achieve level completion (reach the flag!)
+**Part D: Full Training Run** ⏳ IN PROGRESS
+- [x] Launch 2M timestep PPO v2 training run ✅ 2026-01-11 (running overnight)
+- [ ] Evaluate trained model
+- [ ] Create comparison notebook (PPO v2 vs DQN baseline)
+- [ ] Clean up PostgreSQL database
+- [ ] Generate visualizations
+
+**Phase 5 Artifacts:**
+- `configs/ppo_v2.yaml` - Tuned PPO configuration
+- `src/environments/wrappers.py` - `RewardShapingWrapper` with milestone bonuses
+- `src/environments/vec_mario_env.py` - Added `VecMonitor` wrapping
+- `src/training/callbacks.py` - Fixed vectorized environment iteration
+
+**Key Learnings:**
+- SubprocVecEnv runs environments in separate processes - print statements don't appear in main terminal
+- Reward shaping alone doesn't make episodes end faster - need early termination too
+- On-policy algorithms (PPO) need stronger reward signals than off-policy (DQN) because they discard data after each update
+- Gym vs Gymnasium API differences: old gym returns 4 values from step(), new gymnasium returns 5
 
 ### Phase 6: Imitation Learning (Feb-Mar 2026)
 

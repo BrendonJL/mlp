@@ -22,6 +22,21 @@ class CompatibilityWrapper(gym.Wrapper):
         else:
             return result, {}  # Convert obs -> (obs, {})
 
+    def step(self, action):
+        # Call underlying environment
+        result = self.env.step(action)
+
+        # Handle old gym API (4 values) vs new gymnasium API (5 values)
+        if len(result) == 4:
+            obs, reward, done, info = result
+            # Convert to new API: done -> (terminated, truncated)
+            terminated = done
+            truncated = False
+            return obs, reward, terminated, truncated, info
+        else:
+            # Already new API
+            return result
+
 
 class GrayscaleWrapper(gym.ObservationWrapper):
     def __init__(self, env):
@@ -104,6 +119,75 @@ class FrameStackWrapper(gym.ObservationWrapper):
 
     def _get_stacked_frames(self):
         return np.concatenate(list(self.frames), axis=-1)
+
+
+class RewardShapingWrapper(gym.Wrapper):
+    """Shape rewards to encourage forward progress and discourage standing still."""
+
+    def __init__(
+        self,
+        env,
+        forward_bonus=0.1,
+        backward_penalty=0.1,
+        idle_penalty=0.2,
+        death_penalty=50.0,
+        max_stuck_steps=150,  # End episode if stuck for this many steps
+    ):
+        super().__init__(env)
+        self.forward_bonus = forward_bonus  # Reward per pixel moved right
+        self.backward_penalty = backward_penalty  # Penalty per pixel moved left
+        self.idle_penalty = idle_penalty  # Penalty for not moving
+        self.death_penalty = death_penalty  # Penalty for losing a life
+        self.max_stuck_steps = max_stuck_steps  # Early termination threshold
+        self.prev_x_pos = 0
+        self.prev_life = 2
+        self.stuck_count = 0  # Track consecutive steps without movement
+        # Milestone bonuses for reaching certain x positions
+        self.milestones = {650: 150, 900: 100, 1200: 150, 1600: 200, 2000: 250}
+        self.reached_milestones = set()
+
+    def reset(self, **kwargs):
+        obs, info = self.env.reset(**kwargs)
+        self.prev_x_pos = info.get("x_pos", 0)
+        self.prev_life = info.get("life", 2)
+        self.stuck_count = 0
+        self.reached_milestones = set()  # Reset milestones each episode
+        return obs, info
+
+    def step(self, action):
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        current_x_pos = info["x_pos"]
+        current_life = info["life"]
+        x_delta = current_x_pos - self.prev_x_pos
+
+        # Apply reward shaping
+        if x_delta > 0:
+            reward = reward + self.forward_bonus * x_delta
+            self.stuck_count = 0  # Reset stuck counter when moving forward
+        if x_delta < 0:
+            reward = reward - self.backward_penalty * abs(x_delta)
+            self.stuck_count = 0  # Reset stuck counter when moving (even backward)
+        if x_delta == 0:
+            reward = reward - self.idle_penalty
+            self.stuck_count += 1  # Increment stuck counter
+
+        if current_life < self.prev_life:
+            reward = reward - self.death_penalty
+
+        # Milestone bonuses for reaching new x positions
+        for threshold, bonus in self.milestones.items():
+            if current_x_pos >= threshold and threshold not in self.reached_milestones:
+                reward += bonus
+                self.reached_milestones.add(threshold)
+
+        # Early termination if stuck too long
+        if self.stuck_count >= self.max_stuck_steps:
+            terminated = True
+
+        self.prev_x_pos = current_x_pos
+        self.prev_life = current_life
+
+        return obs, reward, terminated, truncated, info
 
 
 class TransposeWrapper(gym.ObservationWrapper):

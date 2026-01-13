@@ -97,7 +97,7 @@ def evaluate_episode(model, env, episode_num):
     # Episode loop - agent plays until done
     # Timeout at 5000 steps (reasonable for trained agent)
     while not done and steps < 5000:
-        action, _states = model.predict(obs, deterministic=True)
+        action, _states = model.predict(obs, deterministic=False)
         action = int(action)  # Convert numpy array to Python int
         obs, reward, terminated, truncated, info = env.step(action)
         total_reward += reward

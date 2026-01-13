@@ -3,6 +3,7 @@ from nes_py.wrappers import JoypadSpace
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from src.environments.wrappers import (
     CompatibilityWrapper,
+    RewardShapingWrapper,
     GrayscaleWrapper,
     ResizeWrapper,
     FrameStackWrapper,
@@ -18,6 +19,7 @@ def make_mario_env(
     )
     env = JoypadSpace(env, action_space)
     env = CompatibilityWrapper(env)  # Handle old/new Gym API differences
+    env = RewardShapingWrapper(env)  # Encourage forward progress, penalize idle/death
     env = GrayscaleWrapper(env)
     env = ResizeWrapper(env)
     # NormalizeWrapper removed - let SB3 handle normalization internally
