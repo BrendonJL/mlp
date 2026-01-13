@@ -270,15 +270,18 @@ Fixed all infrastructure issues from Phase 4 and implemented comprehensive rewar
 - With discrete actions, agent must learn to **chain multiple jump actions**
 - DQN's replay buffer remembers rare successful jumps; PPO discards them immediately
 
-**Next Steps:**
-- Add granular milestones around x=700 obstacle
-- Increase stuck timeout (150 → 300 steps)
-- Consider `COMPLEX_MOVEMENT` action space
-- Launch 5M step training run
+**PPO v3 Prepared (10M Step Run):**
+
+Based on research of [successful implementations](https://github.com/yumouwei/super-mario-bros-reinforcement-learning):
+- ✅ Added **linear LR scheduler** (anneals 0.00003 → 0)
+- ✅ Increased training to **10M steps** (5x longer)
+- ✅ Reduced clip_range: 0.2 → **0.15** (Stanford's success)
+- ✅ Increased n_epochs: 5 → **10** (more data reuse)
+- ✅ Increased stuck timeout: 150 → **300** steps
 
 ### Recent Highlights
 
-**Jan 12, 2026** - **PPO v2 Evaluation Complete!** 📊 Analyzed full 2M step PPO v2 training run. Results: 2,197 episodes, avg distance 687px, max 2,226px. Surprising finding: DQN outperformed PPO despite reward shaping! Root cause identified: agent stuck at tall pipe obstacle (x≈700) - can't learn variable jump heights with discrete actions. DQN's replay buffer remembers rare successful jumps while PPO discards them. Created comprehensive comparison notebook with visualizations. Next: hyperparameter tuning and 5M step run! 🔬
+**Jan 12, 2026** - **PPO v2 Evaluation & v3 Preparation!** 📊 Analyzed PPO v2 results: 2,197 episodes, avg 687px, DQN still winning. Researched successful Mario PPO implementations - key finding: **10M steps + LR scheduler** was the winning formula, not sticky actions. Prepared PPO v3 config with linear LR annealing (0.00003→0), clip_range=0.15, n_epochs=10, stuck timeout=300. Added `linear_schedule()` to training code. Ready for 10M step overnight run! 🚀
 
 **Jan 11, 2026** - **Phase 5 Major Progress!** 🚀 Fixed ALL infrastructure bugs from Phase 4. Callbacks now properly iterate over all vectorized environments. Added VecMonitor for episode tracking. Created comprehensive RewardShapingWrapper with forward/backward bonuses, idle/death penalties, early termination, and milestone bonuses. Agent was stuck at x=594 - added milestone at x=650 to incentivize progress. Episode frequency improved ~10x (from 1 per 32k steps to 3 per 9k steps). Full 2M PPO v2 training run launched overnight. Tomorrow: evaluation and comparison notebook! 🎮
 

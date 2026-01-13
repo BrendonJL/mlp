@@ -13,6 +13,23 @@ from src.environments.vec_mario_env import make_vec_mario_env
 from src.training.callbacks import WandbCallback, DatabaseCallback
 
 
+def linear_schedule(initial_value: float):
+    """
+    Linear learning rate schedule that anneals from initial_value to 0.
+
+    Args:
+        initial_value: Starting learning rate
+
+    Returns:
+        A function that takes progress_remaining (1.0 -> 0.0) and returns LR
+    """
+
+    def func(progress_remaining: float) -> float:
+        return progress_remaining * initial_value
+
+    return func
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Parse Arguments")
 
@@ -99,10 +116,17 @@ def main():
 
     print(f"🤖 Creating {algorithm} Agent")
     if algorithm == "PPO":
+        # Check if LR scheduler is enabled
+        if hyperparams.get("use_lr_scheduler", False):
+            lr = linear_schedule(hyperparams["learning_rate"])
+            print(f"📉 Using linear LR scheduler: {hyperparams['learning_rate']} → 0")
+        else:
+            lr = hyperparams["learning_rate"]
+
         model = PPO(
             policy=hyperparams["policy"],
             env=env,
-            learning_rate=hyperparams["learning_rate"],
+            learning_rate=lr,
             batch_size=hyperparams["batch_size"],
             gamma=hyperparams["gamma"],
             n_steps=hyperparams["n_steps"],

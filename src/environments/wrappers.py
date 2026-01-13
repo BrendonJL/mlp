@@ -131,7 +131,7 @@ class RewardShapingWrapper(gym.Wrapper):
         backward_penalty=0.1,
         idle_penalty=0.2,
         death_penalty=50.0,
-        max_stuck_steps=150,  # End episode if stuck for this many steps
+        max_stuck_steps=300,  # End episode if stuck for this many steps (increased for v3)
     ):
         super().__init__(env)
         self.forward_bonus = forward_bonus  # Reward per pixel moved right
