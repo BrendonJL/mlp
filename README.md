@@ -241,6 +241,10 @@ Fixed all infrastructure issues from Phase 4 and implemented comprehensive rewar
 - ✅ Full 2M PPO v2 training run completed
 - ✅ Comparison notebook created (`notebooks/03_ppo_vs_dqn_comparison.ipynb`)
 
+### 🎮 Watch the Trained Agent Play
+
+ <video src="https://github.com/user-attachments/assets/3fbaf2ef-eff8-4f60-b2cc-14f0fcec5507" controls></video>
+
 **PPO v2 Training Results:**
 
 | Metric | DQN (Phase 3) | PPO v2 (Phase 5) |
@@ -249,6 +253,16 @@ Fixed all infrastructure issues from Phase 4 and implemented comprehensive rewar
 | Avg Distance | 1,024 px | 687.7 px |
 | Max Distance | 2,743 px | 2,226 px |
 | Training Time | ~12 hrs | ~5.5 hrs |
+
+### 📊 Training Results Visualizations
+
+**Performance Comparison: Random vs DQN**
+
+![Reward Distribution Comparison 1](docs/images/PPOvsDQN1.png)
+
+![Reward Distribution Comparison 2](docs/images/PPOvsDQN3.png)
+
+![Learning Curve](docs/images/PPOvsDQN2.png)
 
 **Key Discovery: The Tall Pipe Problem**
 - Agent consistently gets stuck at x ≈ 700 (first tall obstacle)
