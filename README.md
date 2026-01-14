@@ -253,7 +253,7 @@ Fixed all infrastructure issues from Phase 4, implemented comprehensive reward s
 
 ### 🎮 Watch the PPO v3 Agent Play
 
-<!-- VIDEO_PLACEHOLDER: Upload PPO v3 evaluation video here -->
+<video src="https://github.com/user-attachments/assets/dc3092f0-26c7-4bbb-bd4e-68d59a023659" controls></video>
 
 ### 📊 PPO v3 Results - BREAKTHROUGH! 🎉
 
