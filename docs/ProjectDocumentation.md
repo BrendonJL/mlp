@@ -264,7 +264,7 @@ PPO training ran for 2M steps (~10.2 hours) but the policy collapsed after 800k 
 - **Monitoring is critical**: Without proper logging, policy collapse went undetected for hours
 - **Value loss spikes**: Periodic spikes to 30-50 were warning signs of instability
 
-### Phase 5: Infrastructure Fixes, Reward Shaping & Hyperparameter Tuning ⏳ IN PROGRESS (Jan 11, 2026)
+### Phase 5: Infrastructure Fixes, Reward Shaping & Hyperparameter Tuning ⏳ IN PROGRESS (Jan 11-13, 2026)
 
 **Part A: Fix Infrastructure (Prerequisites)** ✅ COMPLETE
 - [x] Fix callbacks for vectorized environments:
@@ -290,39 +290,133 @@ PPO training ran for 2M steps (~10.2 hours) but the policy collapsed after 800k 
   - [x] Early termination (episode ends after 150 stuck steps) ✅ 2026-01-11
   - [x] Milestone bonuses (650→+150, 900→+100, 1200→+150, 1600→+200, 2000→+250) ✅ 2026-01-11
 
-**Part D: Full Training Run** ⏳ IN PROGRESS
-- [x] Launch 2M timestep PPO v2 training run ✅ 2026-01-11 (running overnight)
-- [ ] Evaluate trained model
-- [ ] Create comparison notebook (PPO v2 vs DQN baseline)
-- [ ] Clean up PostgreSQL database
-- [ ] Generate visualizations
+**Part D: Full Training Runs** ✅ COMPLETE
+- [x] Launch 2M timestep PPO v2 training run ✅ 2026-01-11
+- [x] Evaluate PPO v2 trained model ✅ 2026-01-12
+- [x] Create comparison notebook (PPO v2 vs DQN baseline) ✅ 2026-01-12
+- [x] Clean up PostgreSQL database ✅ 2026-01-12
+- [x] Generate visualizations ✅ 2026-01-12
+- [x] Research successful Mario PPO implementations ✅ 2026-01-12
+- [x] Create PPO v3 config with LR scheduler (10M steps) ✅ 2026-01-12
+- [x] Launch 10M timestep PPO v3 training run ✅ 2026-01-13
+- [x] Evaluate PPO v3 trained model ✅ 2026-01-14
+- [x] Update comparison notebook with PPO v3 results ✅ 2026-01-14
+
+**PPO v3 Results - BREAKTHROUGH! 🎉**
+| Metric | DQN (2M) | PPO v2 (2M) | PPO v3 (10M) |
+|--------|----------|-------------|--------------|
+| Avg Distance | 1,024 px | 687 px | **1,319 px** 🏆 |
+| Avg Reward | 1,920 | 700 | **2,025** 🏆 |
+| Max Distance | 1,673 px | 2,226 px | 1,674 px |
+| Episodes | 785 | 2,197 | 4,684 |
+
+**Key Achievement:** PPO v3 finally beat DQN! 1.29x further distance, 1.05x more reward.
+
+**Part E: Frame Skip Optimization** ⏳ PENDING
+- [ ] Implement `SkipFrame` wrapper (skip=4 frames per action)
+- [ ] Add wrapper to environment pipeline (early in chain, before preprocessing)
+- [ ] Create `configs/ppo_v4.yaml` with frame skip enabled
+- [ ] Run 2M step test with frame skip
+- [ ] Compare results: Does frame skip break past the 722 barrier?
+- [ ] Document findings and decide on final config for Phase 6
+
+**Why Frame Skip Matters:**
+Without frame skip, the agent processes every frame at 60 FPS:
+- To "hold jump" for 0.5 seconds = must output "jump" 30 consecutive times
+- This is the core of the "Tall Pipe Problem"
+
+With frame skip (skip=4):
+- Each action repeats for 4 frames automatically
+- To "hold jump" for 0.5 seconds = only need ~7 consecutive "jump" actions
+- Dramatically reduces exploration difficulty
+
+**PPO v2 Results (2M steps):**
+- DQN still outperformed: avg 1,024 px vs PPO's 687 px
+- Root cause: "Tall Pipe Problem" at x≈700 - agent can't chain enough jumps
+- Key insight: Mario's physics require temporal action sequences (holding jump), difficult with discrete actions
+
+**PPO v3 Configuration Changes:**
+| Parameter | v2 → v3 | Rationale |
+|-----------|---------|-----------|
+| total_timesteps | 2M → 10M | Successful implementations trained 5x longer |
+| use_lr_scheduler | false → true | Linear annealing (3e-05 → 0) improves stability |
+| clip_range | 0.2 → 0.15 | Stanford's successful config |
+| n_epochs | 5 → 10 | More data reuse per update |
+| max_stuck_steps | 150 → 300 | More attempts at obstacles |
 
 **Phase 5 Artifacts:**
 - `configs/ppo_v2.yaml` - Tuned PPO configuration
+- `configs/ppo_v3.yaml` - 10M step config with LR scheduler
 - `src/environments/wrappers.py` - `RewardShapingWrapper` with milestone bonuses
 - `src/environments/vec_mario_env.py` - Added `VecMonitor` wrapping
 - `src/training/callbacks.py` - Fixed vectorized environment iteration
+- `src/training/train.py` - Added `linear_schedule()` function for LR annealing
+- `notebooks/03_ppo_vs_dqn_comparison.ipynb` - Full analysis notebook
 
 **Key Learnings:**
 - SubprocVecEnv runs environments in separate processes - print statements don't appear in main terminal
 - Reward shaping alone doesn't make episodes end faster - need early termination too
 - On-policy algorithms (PPO) need stronger reward signals than off-policy (DQN) because they discard data after each update
 - Gym vs Gymnasium API differences: old gym returns 4 values from step(), new gymnasium returns 5
+- **Deterministic vs Stochastic evaluation**: `deterministic=False` samples from policy (matches training), `deterministic=True` always picks highest probability
+- **Action space limitations**: SIMPLE_MOVEMENT (7 actions) can't "hold" buttons - high jumps require chaining consecutive jump actions
+- **Training duration matters**: Research showed successful Mario PPO runs used 10M+ steps with LR scheduling
 
-### Phase 6: Imitation Learning (Feb-Mar 2026)
+### Phase 6: Imitation Learning ⏳ NEXT (Jan 2026)
 
-- [ ] Research imitation learning approaches:
-  - [ ] Behavioral Cloning (BC)
-  - [ ] DAgger (Dataset Aggregation)
-  - [ ] GAIL (Generative Adversarial Imitation Learning)
-- [ ] Collect expert demonstrations:
-  - [ ] Manual gameplay recording
-  - [ ] State-action pair extraction
-- [ ] Implement imitation learning pipeline:
-  - [ ] Pre-train policy from demonstrations
-  - [ ] Fine-tune with RL (hybrid approach)
-- [ ] Compare pure RL vs imitation-assisted learning
-- [ ] Document effectiveness of human demonstrations
+**Goal:** Teach the agent speedrunning techniques it can't discover through random exploration.
+
+**Planned Approach: BC Pre-training → PPO Fine-tuning**
+
+This hybrid approach leverages both demonstration data and reinforcement learning:
+1. **Behavioral Cloning (BC)**: Supervised learning on expert (state, action) pairs to initialize policy
+2. **PPO Fine-tuning**: Continue training with RL to optimize beyond demonstrations
+3. **Optional reward shaping**: Bonus reward when agent's action matches expert
+
+**Data Sources (Two-Stage Plan):**
+
+| Stage | Source | Purpose | Format Conversion |
+|-------|--------|---------|-------------------|
+| Stage 1 | [rafaelcp/smbdataset](https://github.com/rafaelcp/smbdataset) | Competent play (737k frames, 280 episodes) | 256x240 → 84x84, 256 actions → 7 actions |
+| Stage 2 | TAS input files from [TASVideos.org](https://tasvideos.org) | Speedrun tricks & glitches | Parse .fm2 files, replay through environment |
+
+**Why Two Stages:**
+- **Stage 1 (smbdataset)**: General competent play - clearing obstacles, basic strategies
+- **Stage 2 (TAS)**: Specific speedrun tricks that require precise inputs (wall clips, momentum glitches)
+
+**Action Space Considerations:**
+- Current: `SIMPLE_MOVEMENT` (7 actions) - no left+jump combinations
+- Speedrun tricks may require `COMPLEX_MOVEMENT` (12 actions) or custom action space
+- More actions = longer training (exploration scales combinatorially, not linearly)
+- Custom action space option: Add only `left+A` for specific tricks without full complexity
+
+**Reward Shaping Adjustments:**
+- Current backward penalty (-0.1/pixel left) discourages learning tricks requiring leftward movement
+- For speedrun training: reduce penalty to -0.05 or make context-dependent
+- Let imitation learning handle the 5% exception cases where left movement is optimal
+
+**Technical Approach:**
+- **Frame skip (skip=4)** included in environment pipeline (validated in Phase 5 Part E)
+- Transfer CNN feature layers from trained PPO model (visual understanding transfers)
+- Retrain output layers for new action space if switching to COMPLEX_MOVEMENT
+- Use demonstrations to guide exploration past obstacles agent is stuck on
+
+**Tasks:**
+- [ ] Download and preprocess smbdataset (format conversion)
+- [ ] Implement BC training pipeline (supervised learning on demos)
+- [ ] Test BC pre-training → PPO fine-tuning workflow
+- [ ] Research TAS file format (.fm2) and conversion to action indices
+- [ ] Create demo replay script to capture (observation, action) pairs from TAS
+- [ ] Evaluate custom action space (SIMPLE + left+A) vs full COMPLEX_MOVEMENT
+- [ ] Adjust reward shaping for speedrun-friendly training
+- [ ] Train and evaluate imitation-augmented agent
+- [ ] Compare: Pure RL vs BC-initialized vs Full imitation pipeline
+
+**Key Concepts to Learn:**
+- Behavioral Cloning: Supervised learning on expert demonstrations
+- Credit assignment problem: Connecting immediate actions to delayed rewards
+- Policy distillation: Using one trained agent's outputs to teach another
+- On-policy vs off-policy implications for demonstration data
 
 ### Phase 7: Production & Analysis (Mar-Apr 2026)
 
@@ -347,18 +441,30 @@ PPO training ran for 2M steps (~10.2 hours) but the policy collapsed after 800k 
   - [ ] Architecture decisions
   - [ ] Lessons learned
 
-### Phase 8: Extensions (Ongoing, Apr 2026+)
+### Project Complete 🎉
 
-- [ ] Expand to other games:
-  - [ ] Sonic the Hedgehog
-  - [ ] Contra
-  - [ ] Custom environments
-- [ ] Implement curiosity-driven exploration
-- [ ] Multi-agent training (competitive/cooperative)
-- [ ] Transfer learning between game levels
-- [ ] Model distillation (compress large models)
-- [ ] Real-time inference optimization
-- [ ] Web dashboard for live agent monitoring
+After Phase 7, this project concludes. The skills developed here directly feed into the next learning projects:
+
+**Learning Roadmap:**
+```
+Mario RL Agent (current)
+    ↓ ML fundamentals, training pipelines, experiment tracking
+Network Modeling & Fundamentals
+    ↓ Understanding network traffic patterns, protocols
+Network Attack Vectors
+    ↓ Knowledge for testing ML-based detection
+Firewall Tool Development
+    ↓ Build the core infrastructure
+ML-Enhanced Firewall
+    └── Apply everything: anomaly detection, intelligent alerting
+```
+
+**Skills Transferring to Cybersecurity:**
+- **Preprocessing pipelines**: Frame processing → Packet/flow feature extraction
+- **Experiment tracking**: W&B/PostgreSQL → Model versioning for detection rules
+- **Reward shaping**: Game rewards → Alert severity scoring
+- **On-policy vs off-policy**: Understanding when models need fresh data vs historical
+- **Deployment (Phase 7)**: Containerization and CI/CD for production ML systems
 
 ## Future Applications
 

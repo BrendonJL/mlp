@@ -38,6 +38,41 @@ class CompatibilityWrapper(gym.Wrapper):
             return result
 
 
+class SkipFrameWrapper(gym.Wrapper):
+    """
+    Skip frames to reduce effective frame rate and enable action persistence.
+
+    Each action is repeated for 'skip' frames. This makes it easier to learn
+    actions that require holding a button (like high jumps in Mario).
+
+    Args:
+        env: The environment to wrap
+        skip: Number of frames to repeat each action (default: 4)
+    """
+
+    def __init__(self, env, skip=4):
+        super().__init__(env)
+        self.skip = skip
+
+    def step(self, action):
+        # TODO(human): Implement the frame skip logic
+        #
+        # Goal: Repeat the same action for self.skip frames
+        #
+        # Requirements:
+        # 1. Accumulate total_reward across all frames
+        # 2. Stop early if terminated or truncated becomes True
+        # 3. Return the LAST observation and info
+        # 4. Return accumulated reward and final terminated/truncated status
+        #
+        # Variables available:
+        #   - self.skip: number of frames to repeat
+        #   - self.env.step(action): returns (obs, reward, terminated, truncated, info)
+        #
+        # Return: (obs, total_reward, terminated, truncated, info)
+        pass
+
+
 class GrayscaleWrapper(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)

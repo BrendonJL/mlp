@@ -41,12 +41,17 @@ mlp/
 │       └── db_logger.py
 ├── configs/             # Hyperparameter configurations (YAML)
 │   ├── dqn_baseline.yaml
-│   └── ppo_baseline.yaml
+│   ├── ppo_baseline.yaml
+│   ├── ppo_v2.yaml
+│   └── ppo_v3.yaml
 ├── models/              # Saved model checkpoints
-│   └── dqn_baseline_world1-1_final.zip
+│   ├── dqn_baseline_world1-1_final.zip
+│   ├── ppo_v2_world1-1_final.zip
+│   └── ppo_v3_world1-1_final.zip
 ├── notebooks/           # Jupyter analysis notebooks
 │   ├── 01_environment_exploration.ipynb
-│   └── 02_baseline_vs_dqn_comparison.ipynb
+│   ├── 02_baseline_vs_dqn_comparison.ipynb
+│   └── 03_ppo_vs_dqn_comparison.ipynb
 ├── scripts/             # Testing and exploration scripts
 │   ├── random_agent.py
 │   ├── evaluate_model.py
@@ -105,7 +110,8 @@ mlp/
 - [x] Implement reproducible experiment configurations (YAML) ✅
 - [x] Build evaluation and analysis pipelines ✅
 - [x] Implement PPO with parallel environments ✅
-- [ ] Reward shaping and hyperparameter tuning
+- [x] Reward shaping and hyperparameter tuning ✅
+- [ ] Frame skip optimization (in progress)
 - [ ] Imitation learning techniques
 - [ ] Deploy containerized ML applications
 - [ ] Apply ML to real-world security problems
@@ -225,67 +231,82 @@ Implemented PPO with parallel environments - discovered critical issues:
 
 See [ProjectDocumentation.md](docs/ProjectDocumentation.md) for complete timeline and detailed implementation phases.
 
-**⏳ Phase 5: Infrastructure Fixes & Reward Shaping** (In Progress - Jan 11-12, 2026)
+**✅ Phase 5: Infrastructure Fixes & Reward Shaping** (Complete - Jan 11-14, 2026)
 
-Fixed all infrastructure issues from Phase 4 and implemented comprehensive reward shaping:
+Fixed all infrastructure issues from Phase 4, implemented comprehensive reward shaping, and achieved **PPO v3 breakthrough - beating DQN!** 🎉
+
+**Infrastructure Fixes:**
 - ✅ Fixed callbacks to iterate over ALL vectorized environments
 - ✅ Added `VecMonitor` for proper episode tracking
 - ✅ Fixed gym/gymnasium API compatibility in `CompatibilityWrapper`
 - ✅ Reduced parallel envs (8 → 4) to prevent CPU throttling
-- ✅ Tuned hyperparameters (lower LR, higher entropy)
-- ✅ Created `RewardShapingWrapper` with:
-  - Forward/backward/idle rewards and penalties
-  - Death penalty (-50)
-  - Early termination when stuck (150 steps)
-  - Milestone bonuses (650, 900, 1200, 1600, 2000 x-positions)
-- ✅ Full 2M PPO v2 training run completed
-- ✅ Comparison notebook created (`notebooks/03_ppo_vs_dqn_comparison.ipynb`)
 
-### 🎮 Watch the Trained Agent Play
+**Reward Shaping:**
+- ✅ Created `RewardShapingWrapper` with forward/backward/idle rewards
+- ✅ Death penalty (-50) and early termination when stuck
+- ✅ Milestone bonuses (650, 900, 1200, 1600, 2000 x-positions)
 
- <video src="https://github.com/user-attachments/assets/3fbaf2ef-eff8-4f60-b2cc-14f0fcec5507" controls></video>
+**PPO v3 - The Breakthrough:**
+- ✅ 10M timesteps with linear LR scheduler (0.00003 → 0)
+- ✅ Tuned hyperparameters: clip_range=0.15, n_epochs=10
+- ✅ **Finally beat DQN!** 🏆
 
-**PPO v2 Training Results:**
+### 🎮 Watch the PPO v3 Agent Play
 
-| Metric | DQN (Phase 3) | PPO v2 (Phase 5) |
-|--------|---------------|------------------|
-| Episodes | 785 | 2,197 |
-| Avg Distance | 1,024 px | 687.7 px |
-| Max Distance | 2,743 px | 2,226 px |
-| Training Time | ~12 hrs | ~5.5 hrs |
+<!-- VIDEO_PLACEHOLDER: Upload PPO v3 evaluation video here -->
 
-### 📊 Training Results Visualizations
+### 📊 PPO v3 Results - BREAKTHROUGH! 🎉
 
-**Performance Comparison: Random vs DQN**
+| Metric | DQN (2M steps) | PPO v2 (2M steps) | PPO v3 (10M steps) |
+|--------|----------------|-------------------|---------------------|
+| Avg Distance | 1,024 px | 687 px | **1,319 px** 🏆 |
+| Max Distance | 1,673 px | 2,226 px | **1,674 px** |
+| Avg Reward | 1,920 | 700 | **2,025** 🏆 |
+| Episodes | 785 | 2,197 | **4,684** |
 
-![Reward Distribution Comparison 1](docs/images/PPOvsDQN1.png)
+**Key Achievements:**
+- 🏆 **PPO v3 beats DQN**: 1.29x further distance, 1.05x more reward
+- 🚀 **Broke the 722 barrier**: Agent now consistently clears the tall pipe obstacle
+- 📈 **Stable training**: LR scheduler prevented policy collapse over 10M steps
 
-![Reward Distribution Comparison 2](docs/images/PPOvsDQN3.png)
+### 📊 Training Visualizations
 
-![Learning Curve](docs/images/PPOvsDQN2.png)
+**Distance Distribution: All Agents**
 
-**Key Discovery: The Tall Pipe Problem**
-- Agent consistently gets stuck at x ≈ 700 (first tall obstacle)
-- Mario requires **variable jump heights** (hold button longer = jump higher)
-- With discrete actions, agent must learn to **chain multiple jump actions**
-- DQN's replay buffer remembers rare successful jumps; PPO discards them immediately
+![Distance Distribution Comparison](docs/images/Distance%20Distribution:%20DQN%20vs%20PPO%20v2%20vs%20PPO%20v3.png)
 
-**PPO v3 Prepared (10M Step Run):**
+*Box plot showing PPO v3 (gold) achieving higher median distance than DQN (green) and PPO v2 (blue).*
 
-Based on research of [successful implementations](https://github.com/yumouwei/super-mario-bros-reinforcement-learning):
-- ✅ Added **linear LR scheduler** (anneals 0.00003 → 0)
-- ✅ Increased training to **10M steps** (5x longer)
-- ✅ Reduced clip_range: 0.2 → **0.15** (Stanford's success)
-- ✅ Increased n_epochs: 5 → **10** (more data reuse)
-- ✅ Increased stuck timeout: 150 → **300** steps
+**Learning Curves: Side-by-Side Comparison**
+
+![Learning Curves Comparison](docs/images/Learning%20Curves%20Comparison%20-%20All%20Trained%20Agents.png)
+
+*All three trained agents compared. PPO v3 shows steady improvement over 4,684 episodes.*
+
+**PPO v3 Learning Curve: Breaking the 722 Barrier**
+
+![PPO v3 Breakthrough](docs/images/PPO%20v3%20Learning%20Curve:%20Distance%20Over%20Training%20(10M%20steps)%20-%20BREAKTHROUGH!'.png)
+
+*The red dashed line marks the "tall pipe" at x=722. PPO v3's moving average (orange) shows the agent learning to consistently clear this obstacle.*
+
+**What Made the Difference:**
+- **Training duration**: 10M steps gave enough exploration opportunities
+- **LR scheduler**: Linear decay to 0 locked in learned behavior without collapse
+- **Research-backed hyperparameters**: clip_range=0.15, n_epochs=10 from successful implementations
+
+**Next: Frame Skip Optimization**
+- Implementing `SkipFrame` wrapper (skip=4 frames per action)
+- Hypothesis: Will make jump chaining even easier and improve consistency
 
 ### Recent Highlights
 
-**Jan 12, 2026** - **PPO v2 Evaluation & v3 Preparation!** 📊 Analyzed PPO v2 results: 2,197 episodes, avg 687px, DQN still winning. Researched successful Mario PPO implementations - key finding: **10M steps + LR scheduler** was the winning formula, not sticky actions. Prepared PPO v3 config with linear LR annealing (0.00003→0), clip_range=0.15, n_epochs=10, stuck timeout=300. Added `linear_schedule()` to training code. Ready for 10M step overnight run! 🚀
+**Jan 14, 2026** - **PPO v3 BEATS DQN!** 🏆🎉 The 10M step training run finished and **PPO v3 finally surpassed DQN!** Evaluation results: avg distance 1,319 px (vs DQN's 1,024), avg reward 2,025 (vs DQN's 1,920). The agent now consistently breaks through the "tall pipe barrier" at x=722 that blocked PPO v2. Key factors: 10M steps of exploration + LR scheduler preventing policy collapse. Updated comparison notebook with all four agents (Random, DQN, PPO v2, PPO v3). Next up: SkipFrame wrapper implementation for even better performance! 🚀
 
-**Jan 11, 2026** - **Phase 5 Major Progress!** 🚀 Fixed ALL infrastructure bugs from Phase 4. Callbacks now properly iterate over all vectorized environments. Added VecMonitor for episode tracking. Created comprehensive RewardShapingWrapper with forward/backward bonuses, idle/death penalties, early termination, and milestone bonuses. Agent was stuck at x=594 - added milestone at x=650 to incentivize progress. Episode frequency improved ~10x (from 1 per 32k steps to 3 per 9k steps). Full 2M PPO v2 training run launched overnight. Tomorrow: evaluation and comparison notebook! 🎮
+**Jan 12, 2026** - **PPO v2 Evaluation & v3 Preparation!** 📊 Analyzed PPO v2 results: 2,197 episodes, avg 687px, DQN still winning. Researched successful Mario PPO implementations - key finding: **10M steps + LR scheduler** was the winning formula, not sticky actions. Prepared PPO v3 config with linear LR annealing (0.00003→0), clip_range=0.15, n_epochs=10, stuck timeout=300. Added `linear_schedule()` to training code. Launched 10M step overnight run! 🚀
 
-**Jan 10, 2026** - **PPO Implementation!** 🔄 Implemented PPO with 8 parallel environments for direct comparison with DQN. Built vectorized environment wrapper using SubprocVecEnv for true multiprocessing parallelism. Updated training script to support multiple algorithms dynamically. Tested pipeline with 10k and 50k timestep runs. Key learnings: on-policy vs off-policy data collection, actor-critic architecture, PPO health metrics (approx_kl, clip_fraction, explained_variance). 🚀
+**Jan 11, 2026** - **Phase 5 Major Progress!** 🚀 Fixed ALL infrastructure bugs from Phase 4. Callbacks now properly iterate over all vectorized environments. Added VecMonitor for episode tracking. Created comprehensive RewardShapingWrapper with forward/backward bonuses, idle/death penalties, early termination, and milestone bonuses. Agent was stuck at x=594 - added milestone at x=650 to incentivize progress. Episode frequency improved ~10x (from 1 per 32k steps to 3 per 9k steps). Full 2M PPO v2 training run completed.
+
+**Jan 10, 2026** - **PPO Implementation!** 🔄 Implemented PPO with 8 parallel environments for direct comparison with DQN. Built vectorized environment wrapper using SubprocVecEnv for true multiprocessing parallelism. Updated training script to support multiple algorithms dynamically. Key learnings: on-policy vs off-policy data collection, actor-critic architecture, PPO health metrics (approx_kl, clip_fraction, explained_variance). 🚀
 
 **Jan 4, 2026** - **PHASE 3 COMPLETE!** 🎉 Agent achieved 5.3x improvement over random baseline! Built evaluation script and comprehensive analysis notebook with interactive visualizations. Discovered agent learned meaningful strategies (rightward movement, enemy interaction, coin collection) but still struggles with level completion (0% success rate - reaches 31% of level). Key technical learning: deterministic vs stochastic policy evaluation. Fixed 13 additional bugs during evaluation development. Total Phase 3 impact: 29 bugs fixed, 500+ lines of code, complete ML workflow established (train → evaluate → analyze). Recorded gameplay video showing trained agent in action. **Phase 3 complete in 3 days!** 🚀
 
