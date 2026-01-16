@@ -27,23 +27,22 @@ This project represents my hands-on journey into machine learning through practi
 ```
 mlp/
 ├── src/                  # Source code
-│   ├── agents/          # RL agent implementations (planned)
 │   ├── environments/    # Game environment wrappers + preprocessing
-│   │   ├── mario_env.py
-│   │   ├── vec_mario_env.py
-│   │   └── wrappers.py
-│   ├── models/          # Neural network architectures (planned)
+│   │   ├── mario_env.py      # Environment factory with wrapper pipeline
+│   │   ├── vec_mario_env.py  # Vectorized environments for parallel training
+│   │   └── wrappers.py       # Custom wrappers (SkipFrame, Grayscale, Resize, etc.)
 │   ├── training/        # Training loops and callbacks
-│   │   ├── train.py
-│   │   └── callbacks.py
+│   │   ├── train.py          # Main training orchestrator
+│   │   └── callbacks.py      # W&B and database logging callbacks
 │   └── utils/           # Helper functions
-│       ├── config_loader.py
-│       └── db_logger.py
+│       ├── config_loader.py  # YAML config loading
+│       └── db_logger.py      # PostgreSQL experiment logging
 ├── configs/             # Hyperparameter configurations (YAML)
 │   ├── dqn_baseline.yaml
 │   ├── ppo_baseline.yaml
 │   ├── ppo_v2.yaml
-│   └── ppo_v3.yaml
+│   ├── ppo_v3.yaml
+│   └── ppo_v4.yaml      # Frame skip configuration
 ├── models/              # Saved model checkpoints
 │   ├── dqn_baseline_world1-1_final.zip
 │   ├── ppo_v2_world1-1_final.zip
@@ -62,8 +61,8 @@ mlp/
 ├── docs/                # Project documentation (Obsidian vault)
 │   ├── ProjectDocumentation.md
 │   └── daily/          # Learning journal
-├── tests/              # Unit tests (planned)
-├── docker/             # Container configurations (planned)
+├── tests/              # Unit tests (planned for Phase 7)
+├── docker/             # Container configurations (planned for Phase 7)
 ├── CLAUDE.md           # Instructions for Claude Code
 └── .pre-commit-config.yaml  # Code quality automation
 ```
@@ -111,7 +110,7 @@ mlp/
 - [x] Build evaluation and analysis pipelines ✅
 - [x] Implement PPO with parallel environments ✅
 - [x] Reward shaping and hyperparameter tuning ✅
-- [ ] Frame skip optimization (in progress)
+- [x] Frame skip optimization ✅
 - [ ] Imitation learning techniques
 - [ ] Deploy containerized ML applications
 - [ ] Apply ML to real-world security problems
@@ -294,11 +293,26 @@ Fixed all infrastructure issues from Phase 4, implemented comprehensive reward s
 - **LR scheduler**: Linear decay to 0 locked in learned behavior without collapse
 - **Research-backed hyperparameters**: clip_range=0.15, n_epochs=10 from successful implementations
 
-**Next: Frame Skip Optimization**
-- Implementing `SkipFrame` wrapper (skip=4 frames per action)
-- Hypothesis: Will make jump chaining even easier and improve consistency
+**⏳ Phase 5 Part E: Frame Skip Optimization** (In Progress - Jan 15, 2026)
+
+`SkipFrameWrapper` implemented and integrated! Early results are **extremely promising**:
+- ✅ Implemented `SkipFrameWrapper` (repeats actions for 4 frames)
+- ✅ Integrated through full config chain (YAML → train.py → vec_mario_env → mario_env → wrapper)
+- ✅ 50k test run: Agent **immediately cleared the 722 barrier** in first 16k steps!
+- 🚀 10M training run in progress...
+
+**Early Test Results (50k steps):**
+| Episode | Distance | Notes |
+|---------|----------|-------|
+| 2 | 1,422 px | Past the pipe! |
+| 5 | 1,405 px | Consistent! |
+| 11 | 1,425 px | Breakthrough confirmed! |
+
+**Why This Works:** Each action now persists for 4 frames, reducing jump chaining difficulty by 4x. High jumps that required 30 consecutive "jump" outputs now only need ~7.
 
 ### Recent Highlights
+
+**Jan 15, 2026** - **FRAME SKIP BREAKTHROUGH!** 🚀 Implemented `SkipFrameWrapper` - actions now repeat for 4 frames automatically. First 50k test run showed agent **immediately breaking through the 722 pipe barrier** that took PPO v3 millions of steps to learn! Episodes 2, 5, 11 all exceeded 1,400 pixels within the first 16k timesteps. This reduces jump chaining difficulty by 4x. Cleaned up unused directories (removed empty `src/agents/`, `src/models/`, `src/preprocessing/`). 10M training run now in progress - expecting best results yet! 🎮
 
 **Jan 14, 2026** - **PPO v3 BEATS DQN!** 🏆🎉 The 10M step training run finished and **PPO v3 finally surpassed DQN!** Evaluation results: avg distance 1,319 px (vs DQN's 1,024), avg reward 2,025 (vs DQN's 1,920). The agent now consistently breaks through the "tall pipe barrier" at x=722 that blocked PPO v2. Key factors: 10M steps of exploration + LR scheduler preventing policy collapse. Updated comparison notebook with all four agents (Random, DQN, PPO v2, PPO v3). Next up: SkipFrame wrapper implementation for even better performance! 🚀
 

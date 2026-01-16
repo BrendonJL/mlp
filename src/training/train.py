@@ -101,11 +101,13 @@ def main():
     db_logger.log_hyperparameters(experiment_id, hyperparams)
 
     print("🎮 Creating Mario Environment(s)")
+    frame_skip = config["environment"].get("frame_skip", 4)
     if algorithm == "PPO":
         env = make_vec_mario_env(
             game_version=config["environment"]["game"],
             action_space=SIMPLE_MOVEMENT,
             n_envs=hyperparams["n_envs"],
+            skip=frame_skip,
         )
     elif algorithm == "DQN":
         env = make_mario_env(
