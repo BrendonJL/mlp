@@ -209,6 +209,104 @@ class RewardShapingWrapper(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 
+class SpeedrunRewardWrapper(gym.Wrapper):
+    """
+    Speedrun-focused reward shaping that IGNORES base game rewards.
+
+    For speedrunning, coins/enemies/score don't matter - only progress and time.
+    This wrapper completely replaces the base game reward with pure progress-based rewards.
+
+    Args:
+        env: The environment to wrap
+        forward_bonus: Reward per pixel moved right (default: 1.0)
+        backward_penalty: Penalty per pixel moved left (default: 0.4, moderate for speedrun tricks)
+        idle_penalty: Penalty for not moving (default: 1.0)
+        death_penalty: Penalty for losing a life (default: 200)
+        completion_bonus: Bonus for capturing the flag (default: 1000)
+        max_stuck_steps: End episode if stuck for this many steps (default: 300)
+    """
+
+    def __init__(
+        self,
+        env,
+        forward_bonus=1.0,
+        backward_penalty=0.4,
+        idle_penalty=1.0,
+        death_penalty=200.0,
+        completion_bonus=1000.0,
+        max_stuck_steps=300,
+    ):
+        super().__init__(env)
+        self.forward_bonus = forward_bonus
+        self.backward_penalty = backward_penalty
+        self.idle_penalty = idle_penalty
+        self.death_penalty = death_penalty
+        self.completion_bonus = completion_bonus
+        self.max_stuck_steps = max_stuck_steps
+        self.prev_x_pos = 0
+        self.prev_life = 2
+        self.stuck_count = 0
+        self.milestones = {
+            650: 300,
+            900: 400,
+            1200: 500,
+            1600: 600,
+            2000: 700,
+            2700: 800,
+            3154: 900,
+            3200: 1000,
+        }
+        self.reached_milestones = set()
+
+    def reset(self, **kwargs):
+        obs, info = self.env.reset(**kwargs)
+        self.prev_x_pos = info.get("x_pos", 0)
+        self.prev_life = info.get("life", 2)
+        self.stuck_count = 0
+        self.reached_milestones = set()
+        return obs, info
+
+    def step(self, action):
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        reward = 0.0
+        current_x_pos = info["x_pos"]
+        current_life = info["life"]
+        x_delta = current_x_pos - self.prev_x_pos
+        flag_get = info["flag_get"]
+        completion_bonus = self.completion_bonus
+
+        if x_delta > 0:
+            reward += self.forward_bonus * x_delta
+            self.stuck_count = 0
+        if x_delta < 0:
+            reward -= self.backward_penalty * abs(x_delta)
+            self.stuck_count = 0
+        if x_delta == 0:
+            reward -= self.idle_penalty
+            self.stuck_count += 1
+
+        if current_life < self.prev_life:
+            reward -= self.death_penalty
+
+        # Milestone bonuses for reaching new x positions
+        for threshold, bonus in self.milestones.items():
+            if current_x_pos >= threshold and threshold not in self.reached_milestones:
+                reward += bonus
+                self.reached_milestones.add(threshold)
+
+        # Early termination if stuck too long
+        if self.stuck_count >= self.max_stuck_steps:
+            terminated = True
+
+        if flag_get:
+            reward += completion_bonus
+
+        self.prev_x_pos = current_x_pos
+        self.prev_life = current_life
+
+        return obs, reward, terminated, truncated, info
+
+
 class TransposeWrapper(gym.ObservationWrapper):
     """Transpose observation from (H, W, C) to (C, H, W) for PyTorch."""
 

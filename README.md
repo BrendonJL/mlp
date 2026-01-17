@@ -6,21 +6,56 @@
 
 > **Learning machine learning by building a reinforcement learning agent that masters Super Mario Bros**
 
-## 🎯 Project Overview
+A hands-on journey into deep reinforcement learning - training agents from scratch to play NES Super Mario Bros. Currently at **83% level completion** with PPO + frame skip optimization!
 
-This project represents my hands-on journey into machine learning through practical application. Rather than starting with pure theory, I'm building a deep reinforcement learning agent capable of learning to play Super Mario Bros from scratch - demonstrating fundamental ML concepts including neural networks, training pipelines, experiment tracking, and model evaluation.
+## 🚀 Latest Results: PPO v4 Breakthrough!
 
-**Why Mario?** It's the perfect learning environment: complex enough to be challenging, simple enough to understand, and engaging enough to stay motivated. Plus, the skills transfer directly to real-world applications.
+| Metric | Random | DQN (2M) | PPO v3 (10M) | **PPO v4 (10M+Skip)** |
+|--------|--------|----------|--------------|----------------------|
+| Avg Distance | 350 px | 1,024 px | 1,319 px | **2,725 px** 🏆 |
+| Avg Reward | 380 | 1,920 | 2,025 | **6,210** 🏆 |
+| vs Random | 1.0x | 2.9x | 3.8x | **7.8x** |
+| Level Progress | 11% | 31% | 40% | **83%** |
 
-**Long-term Goal:** Apply these ML techniques to cybersecurity challenges, specifically Suricata rule generation and intelligent incident reporting systems.
+**Key Insight:** Frame skip (4 frames/action) reduced jump chaining difficulty by 4x, enabling the agent to consistently clear obstacles that blocked previous versions.
 
-## 🚀 Key Features
+## 🎬 Watch the Agents Play
 
-- **Deep Reinforcement Learning**: Implementation of DQN and PPO algorithms
-- **Experiment Tracking**: MLflow and Weights & Biases integration for reproducible research
-- **Production-Ready Pipeline**: Dockerized training environment with CI/CD
-- **Comprehensive Documentation**: Detailed notes on architecture decisions and learning process
-- **Data-Driven Analysis**: PostgreSQL storage with Jupyter notebook visualizations
+### PPO v4 - Current Best (83% of level!)
+<video src="https://github.com/user-attachments/assets/8ae63839-7a65-4ddf-b9db-e48a453a18d6" controls></video>
+
+### PPO v3 - First to Beat DQN
+<video src="https://github.com/user-attachments/assets/dc3092f0-26c7-4bbb-bd4e-68d59a023659" controls></video>
+
+### DQN Baseline - Where It All Started
+<video src="https://github.com/user-attachments/assets/f765d845-52cb-4506-ac57-c3cd909191ab" controls></video>
+
+### PPO v1 - The Epic Failure (Policy Collapse)
+<video src="https://github.com/user-attachments/assets/4f52663e-d855-44b7-b152-37f1d7b72339" controls></video>
+
+*Learning from failure: This collapse taught us about proper callback logging and monitoring!*
+
+## 📊 Training Visualizations
+
+### Combined Learning Curves - The Frame Skip Breakthrough
+![Learning Curves Overlaid](docs/images/v4mlppics/Leanring%20Curve%20Overlaid.png)
+
+*All agents compared on normalized training progress. PPO v4 (teal) shows dramatic improvement from frame skip.*
+
+### PPO v4 Learning Curve
+![PPO v4 Learning Curve](docs/images/v4mlppics/ppoV4learncurv.png)
+
+*18,985 episodes over 10M steps - consistent progress to ~2,700 pixels.*
+
+### Distance Distribution Comparison
+![Distance Distribution](docs/images/v4mlppics/Distance%20Distribution.png)
+
+*Histogram showing where episodes end. PPO v4's distribution shifted far right of previous agents.*
+
+### All Agents Box Plot
+![Distance Comparison](docs/images/v4mlppics/Distance%20Comparison:%20All%20Agents.png)
+
+*Box plot comparing all five agents - PPO v4 shows both higher median and tighter consistency.*
 
 ## 📁 Project Structure
 
@@ -30,7 +65,7 @@ mlp/
 │   ├── environments/    # Game environment wrappers + preprocessing
 │   │   ├── mario_env.py      # Environment factory with wrapper pipeline
 │   │   ├── vec_mario_env.py  # Vectorized environments for parallel training
-│   │   └── wrappers.py       # Custom wrappers (SkipFrame, Grayscale, Resize, etc.)
+│   │   └── wrappers.py       # Custom wrappers (SkipFrame, RewardShaping, etc.)
 │   ├── training/        # Training loops and callbacks
 │   │   ├── train.py          # Main training orchestrator
 │   │   └── callbacks.py      # W&B and database logging callbacks
@@ -39,312 +74,53 @@ mlp/
 │       └── db_logger.py      # PostgreSQL experiment logging
 ├── configs/             # Hyperparameter configurations (YAML)
 │   ├── dqn_baseline.yaml
-│   ├── ppo_baseline.yaml
-│   ├── ppo_v2.yaml
-│   ├── ppo_v3.yaml
-│   └── ppo_v4.yaml      # Frame skip configuration
+│   ├── ppo_v2.yaml, ppo_v3.yaml, ppo_v4.yaml, ppo_v5.yaml
 ├── models/              # Saved model checkpoints
-│   ├── dqn_baseline_world1-1_final.zip
-│   ├── ppo_v2_world1-1_final.zip
-│   └── ppo_v3_world1-1_final.zip
 ├── notebooks/           # Jupyter analysis notebooks
 │   ├── 01_environment_exploration.ipynb
 │   ├── 02_baseline_vs_dqn_comparison.ipynb
 │   └── 03_ppo_vs_dqn_comparison.ipynb
-├── scripts/             # Testing and exploration scripts
-│   ├── random_agent.py
-│   ├── evaluate_model.py
-│   └── test_explore_env.py
+├── scripts/             # Evaluation and testing scripts
 ├── database/            # SQL schemas and migrations
-│   ├── schema.sql
-│   └── schema_migration_01.sql
-├── docs/                # Project documentation (Obsidian vault)
-│   ├── ProjectDocumentation.md
+├── docs/                # Detailed documentation
+│   ├── ProjectDocumentation.md  # Full architecture & progress
 │   └── daily/          # Learning journal
-├── tests/              # Unit tests (planned for Phase 7)
-├── docker/             # Container configurations (planned for Phase 7)
-├── CLAUDE.md           # Instructions for Claude Code
-└── .pre-commit-config.yaml  # Code quality automation
+└── .pre-commit-config.yaml
 ```
 
 ## 🛠️ Tech Stack
 
-**Core ML**
-
-- PyTorch - Deep learning framework
-- Stable-Baselines3 - RL algorithms
-- Gymnasium - Environment interface
-- gym-super-mario-bros - NES Mario environment
-
-**Data & Infrastructure**
-
-- PostgreSQL - Experiment metadata
-- MLflow - Model versioning
-- Weights & Biases - Real-time metrics
-- DVC - Data version control
-
-**Development**
-
-- Poetry - Dependency management
-- Docker - Containerization
-- GitHub Actions - CI/CD
-- pytest - Testing framework
+| Category | Tools |
+|----------|-------|
+| **Core ML** | PyTorch, Stable-Baselines3, Gymnasium, gym-super-mario-bros |
+| **Tracking** | PostgreSQL, Weights & Biases, MLflow |
+| **Development** | Poetry, Docker, GitHub Actions, pytest |
 
 ## 📚 Documentation
 
-- **[Project Architecture](docs/ProjectDocumentation.md)** - Comprehensive project overview, tech stack, and implementation phases
+- **[Project Architecture](docs/ProjectDocumentation.md)** - Comprehensive overview, all phases, detailed results
 - **[Daily Learning Log](docs/daily/)** - Day-by-day progress and insights
-- **[GitHub Repository](https://github.com/BrendonJL/mlp)** - Source code and version history
-
-## 🎓 Learning Objectives
-
-- [x] Set up production-grade ML project structure ✅
-- [x] Configure PostgreSQL for experiment tracking ✅
-- [x] Implement database schema design with relational integrity ✅
-- [x] Establish baseline metrics for RL environments ✅
-- [x] Build preprocessing pipelines for game state observations ✅
-- [x] Integrate cloud experiment tracking (Weights & Biases) ✅
-- [x] Master reinforcement learning fundamentals (DQN concepts) ✅
-- [x] Train deep RL agent with neural networks (CnnPolicy) ✅
-- [x] Implement reproducible experiment configurations (YAML) ✅
-- [x] Build evaluation and analysis pipelines ✅
-- [x] Implement PPO with parallel environments ✅
-- [x] Reward shaping and hyperparameter tuning ✅
-- [x] Frame skip optimization ✅
-- [ ] Imitation learning techniques
-- [ ] Deploy containerized ML applications
-- [ ] Apply ML to real-world security problems
-
-## 🚧 Current Status
-
-**✅ Phase 1: Environment Setup** (Complete - Dec 26-29, 2025)
-
-The foundation is solid! Completed in 3 days:
-- ✅ Project structure with Poetry dependency management
-- ✅ Git workflow and GitHub integration
-- ✅ Obsidian documentation system with daily logs
-- ✅ PostgreSQL database with 4-table schema design
-- ✅ Weights & Biases cloud experiment tracking
-- ✅ Pre-commit hooks for automated code quality
-
-**✅ Phase 2: Baseline Agent** (Complete - Dec 30-31, 2025)
-
-Production-quality baseline established:
-- ✅ Random agent implementation with 10-episode baseline run
-- ✅ Enhanced metrics tracking (13 comprehensive values)
-- ✅ Frame preprocessing pipeline (grayscale, resize, normalize, frame stack)
-- ✅ Weights & Biases cloud logging with authentication
-- ✅ PostgreSQL schema migration for episode metrics
-- ✅ Jupyter notebook for environment exploration
-- ✅ Success criteria defined for Phase 3 (x_pos > 434, score ≥ 100, flag_get = True)
-
-**Baseline Performance:**
-- Average reward: ~380
-- Max distance (x_pos): 434
-- Level completions: 0/10 (expected for random)
-- Episode length: 1000 steps (always timeout)
-
-**✅ Phase 3: Simple RL Algorithm** (Complete - Jan 2-4, 2026)
-
-**Major Achievement:** Successfully trained a DQN agent that performs **5.3x better** than random baseline!
-
-**Training Results:**
-- Average reward: **1920** (vs 360 random) - **5.33x improvement** 🎯
-- Average distance: **1024 pixels** (vs 350 random) - **2.92x improvement** 🏃
-- Average score: **590** (vs 40 random) - **14.76x improvement** 💰
-- Training episodes: 785 episodes (~12 hours, 2M timesteps)
-- Database metrics: 13 comprehensive values tracked per episode
-
-**What the Agent Learned:**
-- Consistent rightward movement (3x further than random)
-- Jump on enemies (Goombas) for points
-- Collect coins and power-ups
-- Navigate basic obstacles
-
-**Current Limitations:**
-- Level completion: 0% (never reached the flag at 3266 pixels)
-- Gets stuck at complex obstacle sequences
-- Average progress: 1024 pixels (31% of level)
-
-**Completed Deliverables:**
-- ✅ Full DQN training pipeline with Stable-Baselines3
-- ✅ Evaluation script with video recording (`scripts/evaluate_model.py`)
-- ✅ Comparative analysis notebook (`notebooks/02_baseline_vs_dqn_comparison.ipynb`)
-- ✅ 785 training episodes logged to PostgreSQL + Weights & Biases
-- ✅ Gameplay video of trained agent
-
-### 🎮 Watch the Trained Agent Play
-
- <video src="https://github.com/user-attachments/assets/f765d845-52cb-4506-ac57-c3cd909191ab" controls></video>
-
-  *DQN agent navigating World 1-1 - Notice how it jumps on enemies and moves consistently rightward!*
-
-### 📊 Training Results Visualizations
-
-**Performance Comparison: Random vs DQN**
-
-![Reward Distribution Comparison](docs/images/RandomvsDQN_plot.png)
-
-*Box plot showing dramatic improvement in reward distribution. DQN agent (green) consistently achieves 5x higher rewards than random baseline (coral).*
-
-**DQN Learning Curve**
-
-![DQN Learning Curve](docs/images/Episode_Reward_Plot.png)
-
-*Agent performance over 785 training episodes. The 50-episode moving average (green) shows clear learning progression from ~600 to 2000+ reward. Individual episodes (blue dots) show exploration variance.*
-
-**View the Analysis:**
-- 📊 [Interactive Jupyter Notebook](notebooks/02_baseline_vs_dqn_comparison.ipynb) - Full analysis with code
-- 📈 [Weights & Biases Dashboard](https://wandb.ai/blasley/mario-rl-agent) - Live training metrics
-
-**Technical Highlights:**
-- Fixed 29 integration bugs across training and evaluation
-- Learned deterministic vs stochastic policy evaluation
-- Built complete ML workflow: train → evaluate → analyze → iterate
-- Achieved reproducibility with git hash + version tracking
-
-**✅ Phase 4: PPO Baseline & Comparison** (Complete - Jan 10-11, 2026)
-
-Implemented PPO with parallel environments - discovered critical issues:
-- ✅ PPO configuration with parallel environments
-- ✅ Vectorized environment wrapper (SubprocVecEnv)
-- ✅ Multi-algorithm training script (supports DQN and PPO)
-- ⚠️ Training completed but **policy collapsed** after 800k steps
-
-### 🎮 Watch the Trained Agent Play
-
- <video src="https://github.com/user-attachments/assets/4f52663e-d855-44b7-b152-37f1d7b72339" controls></video>
-
- *PPO Agent Epicly Failing to Play Mario*
-
-**Key Discovery: Policy Collapse**
-- 800k checkpoint works (moves right, x=353)
-- Final 2M model is broken (runs backwards into corner)
-- Root cause: Callbacks only logged env[0], missing 7/8 of episode data
-- No early warning system to detect collapse
-
-**Lessons Learned:**
-- 8 parallel envs at 90% CPU caused thermal throttling (10.2 hrs vs expected 4-5)
-- PPO hyperparameters (LR=0.0001, entropy=0.01) likely too aggressive
-- Monitoring infrastructure is critical - can't improve what you can't measure
-
-See [ProjectDocumentation.md](docs/ProjectDocumentation.md) for complete timeline and detailed implementation phases.
-
-**✅ Phase 5: Infrastructure Fixes & Reward Shaping** (Complete - Jan 11-14, 2026)
-
-Fixed all infrastructure issues from Phase 4, implemented comprehensive reward shaping, and achieved **PPO v3 breakthrough - beating DQN!** 🎉
-
-**Infrastructure Fixes:**
-- ✅ Fixed callbacks to iterate over ALL vectorized environments
-- ✅ Added `VecMonitor` for proper episode tracking
-- ✅ Fixed gym/gymnasium API compatibility in `CompatibilityWrapper`
-- ✅ Reduced parallel envs (8 → 4) to prevent CPU throttling
-
-**Reward Shaping:**
-- ✅ Created `RewardShapingWrapper` with forward/backward/idle rewards
-- ✅ Death penalty (-50) and early termination when stuck
-- ✅ Milestone bonuses (650, 900, 1200, 1600, 2000 x-positions)
-
-**PPO v3 - The Breakthrough:**
-- ✅ 10M timesteps with linear LR scheduler (0.00003 → 0)
-- ✅ Tuned hyperparameters: clip_range=0.15, n_epochs=10
-- ✅ **Finally beat DQN!** 🏆
-
-### 🎮 Watch the PPO v3 Agent Play
-
-<video src="https://github.com/user-attachments/assets/dc3092f0-26c7-4bbb-bd4e-68d59a023659" controls></video>
-
-### 📊 PPO v3 Results - BREAKTHROUGH! 🎉
-
-| Metric | DQN (2M steps) | PPO v2 (2M steps) | PPO v3 (10M steps) |
-|--------|----------------|-------------------|---------------------|
-| Avg Distance | 1,024 px | 687 px | **1,319 px** 🏆 |
-| Max Distance | 1,673 px | 2,226 px | **1,674 px** |
-| Avg Reward | 1,920 | 700 | **2,025** 🏆 |
-| Episodes | 785 | 2,197 | **4,684** |
-
-**Key Achievements:**
-- 🏆 **PPO v3 beats DQN**: 1.29x further distance, 1.05x more reward
-- 🚀 **Broke the 722 barrier**: Agent now consistently clears the tall pipe obstacle
-- 📈 **Stable training**: LR scheduler prevented policy collapse over 10M steps
-
-### 📊 Training Visualizations
-
-**Distance Distribution: All Agents**
-
-![Distance Distribution Comparison](docs/images/Distance%20Distribution:%20DQN%20vs%20PPO%20v2%20vs%20PPO%20v3.png)
-
-*Box plot showing PPO v3 (gold) achieving higher median distance than DQN (green) and PPO v2 (blue).*
-
-**Learning Curves: Side-by-Side Comparison**
-
-![Learning Curves Comparison](docs/images/Learning%20Curves%20Comparison%20-%20All%20Trained%20Agents.png)
-
-*All three trained agents compared. PPO v3 shows steady improvement over 4,684 episodes.*
-
-**PPO v3 Learning Curve: Breaking the 722 Barrier**
-
-![PPO v3 Breakthrough](docs/images/PPO%20v3%20Learning%20Curve:%20Distance%20Over%20Training%20(10M%20steps)%20-%20BREAKTHROUGH!'.png)
-
-*The red dashed line marks the "tall pipe" at x=722. PPO v3's moving average (orange) shows the agent learning to consistently clear this obstacle.*
-
-**What Made the Difference:**
-- **Training duration**: 10M steps gave enough exploration opportunities
-- **LR scheduler**: Linear decay to 0 locked in learned behavior without collapse
-- **Research-backed hyperparameters**: clip_range=0.15, n_epochs=10 from successful implementations
-
-**⏳ Phase 5 Part E: Frame Skip Optimization** (In Progress - Jan 15, 2026)
-
-`SkipFrameWrapper` implemented and integrated! Early results are **extremely promising**:
-- ✅ Implemented `SkipFrameWrapper` (repeats actions for 4 frames)
-- ✅ Integrated through full config chain (YAML → train.py → vec_mario_env → mario_env → wrapper)
-- ✅ 50k test run: Agent **immediately cleared the 722 barrier** in first 16k steps!
-- 🚀 10M training run in progress...
-
-**Early Test Results (50k steps):**
-| Episode | Distance | Notes |
-|---------|----------|-------|
-| 2 | 1,422 px | Past the pipe! |
-| 5 | 1,405 px | Consistent! |
-| 11 | 1,425 px | Breakthrough confirmed! |
-
-**Why This Works:** Each action now persists for 4 frames, reducing jump chaining difficulty by 4x. High jumps that required 30 consecutive "jump" outputs now only need ~7.
-
-### Recent Highlights
-
-**Jan 15, 2026** - **FRAME SKIP BREAKTHROUGH!** 🚀 Implemented `SkipFrameWrapper` - actions now repeat for 4 frames automatically. First 50k test run showed agent **immediately breaking through the 722 pipe barrier** that took PPO v3 millions of steps to learn! Episodes 2, 5, 11 all exceeded 1,400 pixels within the first 16k timesteps. This reduces jump chaining difficulty by 4x. Cleaned up unused directories (removed empty `src/agents/`, `src/models/`, `src/preprocessing/`). 10M training run now in progress - expecting best results yet! 🎮
-
-**Jan 14, 2026** - **PPO v3 BEATS DQN!** 🏆🎉 The 10M step training run finished and **PPO v3 finally surpassed DQN!** Evaluation results: avg distance 1,319 px (vs DQN's 1,024), avg reward 2,025 (vs DQN's 1,920). The agent now consistently breaks through the "tall pipe barrier" at x=722 that blocked PPO v2. Key factors: 10M steps of exploration + LR scheduler preventing policy collapse. Updated comparison notebook with all four agents (Random, DQN, PPO v2, PPO v3). Next up: SkipFrame wrapper implementation for even better performance! 🚀
-
-**Jan 12, 2026** - **PPO v2 Evaluation & v3 Preparation!** 📊 Analyzed PPO v2 results: 2,197 episodes, avg 687px, DQN still winning. Researched successful Mario PPO implementations - key finding: **10M steps + LR scheduler** was the winning formula, not sticky actions. Prepared PPO v3 config with linear LR annealing (0.00003→0), clip_range=0.15, n_epochs=10, stuck timeout=300. Added `linear_schedule()` to training code. Launched 10M step overnight run! 🚀
-
-**Jan 11, 2026** - **Phase 5 Major Progress!** 🚀 Fixed ALL infrastructure bugs from Phase 4. Callbacks now properly iterate over all vectorized environments. Added VecMonitor for episode tracking. Created comprehensive RewardShapingWrapper with forward/backward bonuses, idle/death penalties, early termination, and milestone bonuses. Agent was stuck at x=594 - added milestone at x=650 to incentivize progress. Episode frequency improved ~10x (from 1 per 32k steps to 3 per 9k steps). Full 2M PPO v2 training run completed.
-
-**Jan 10, 2026** - **PPO Implementation!** 🔄 Implemented PPO with 8 parallel environments for direct comparison with DQN. Built vectorized environment wrapper using SubprocVecEnv for true multiprocessing parallelism. Updated training script to support multiple algorithms dynamically. Key learnings: on-policy vs off-policy data collection, actor-critic architecture, PPO health metrics (approx_kl, clip_fraction, explained_variance). 🚀
-
-**Jan 4, 2026** - **PHASE 3 COMPLETE!** 🎉 Agent achieved 5.3x improvement over random baseline! Built evaluation script and comprehensive analysis notebook with interactive visualizations. Discovered agent learned meaningful strategies (rightward movement, enemy interaction, coin collection) but still struggles with level completion (0% success rate - reaches 31% of level). Key technical learning: deterministic vs stochastic policy evaluation. Fixed 13 additional bugs during evaluation development. Total Phase 3 impact: 29 bugs fixed, 500+ lines of code, complete ML workflow established (train → evaluate → analyze). Recorded gameplay video showing trained agent in action. **Phase 3 complete in 3 days!** 🚀
-
-**Jan 3, 2026** - **HUGE MILESTONE!** After 3 hours of systematic debugging, achieved first successful end-to-end training run! Fixed 12 integration issues including module imports, config mismatches, API compatibility between old Gym and new Gymnasium, image format for PyTorch, and wrapper design. Built 5 custom wrappers following Single Responsibility Principle. Added git commit hash, Python version, and PyTorch version tracking for reproducibility. Database and wandb logging verified. Launched full 2M timestep training (785 episodes, ~12 hours). **DQN training successful!** 🚀
-
-**Dec 31, 2025** - Phase 2 complete! Built comprehensive random baseline with 13 tracked metrics (x_pos, score, time, coins, life, status, flag_get, etc.), integrated wandb cloud tracking with authentication, extended database schema with 8 new episode metric columns, and established success criteria for Phase 3. Attempted video recording but encountered gym-super-mario-bros render limitations - pragmatically chose metrics-only approach. **Ready for DQN training!** 🚀
-
-**Dec 29, 2025** - Designed and implemented complete database schema for ML experiment tracking. Learned SQL CREATE TABLE syntax, foreign key relationships, and the Entity-Attribute-Value pattern for flexible hyperparameter storage. Set up W&B and pre-commit hooks. Phase 1 complete! 🎉
-
-## 🎯 Future Applications
-
-The skills developed here will transfer to:
-
-- **ML-Enhanced Suricata Rules** - Anomaly detection in network traffic
-- **Intelligent Incident Management** - Alert correlation and prioritization
-- **Threat Intelligence** - Automated IOC extraction and classification
+- **[Jupyter Notebooks](notebooks/)** - Interactive analysis with code
+
+## 🎯 Project Journey
+
+| Phase | Status | Key Achievement |
+|-------|--------|-----------------|
+| 1. Environment Setup | ✅ | PostgreSQL + W&B + Poetry infrastructure |
+| 2. Baseline Agent | ✅ | Random baseline with 13 metrics |
+| 3. DQN Training | ✅ | 5.3x improvement over random |
+| 4. PPO Implementation | ✅ | Learned from policy collapse failure |
+| 5. Reward Shaping & Frame Skip | ✅ | **7.8x improvement, 83% level progress** |
+| 6. Imitation Learning | 🔜 | Next: Learn from demonstrations |
+| 7. Production & CI/CD | 📋 | Planned |
+
+## 🎯 Long-term Goal
+
+Apply these ML techniques to cybersecurity: Suricata rule generation, intelligent incident reporting, and threat detection.
 
 ## 📝 License
 
 MIT License - feel free to learn from this project!
-
-## 🤝 Connect
-
-This is a learning project - feedback and suggestions welcome!
 
 ---
 

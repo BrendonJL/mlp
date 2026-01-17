@@ -41,6 +41,13 @@ def parse_args():
         help="Which RL Alg Would you Like to Use?",
     )
 
+    parser.add_argument(
+        "--skip",
+        type=int,
+        default=4,
+        help="Frame skip value (must match training config)",
+    )
+
     return parser.parse_args()
 
 
@@ -56,7 +63,7 @@ def load_model(model_path, algorithm):
     return model
 
 
-def create_eval_environment():
+def create_eval_environment(skip=4):
     """Create Mario environment for evaluation with rendering enabled."""
     print("🎮 Creating Evaluation Environment")
 
@@ -64,6 +71,7 @@ def create_eval_environment():
         game_version="SuperMarioBros-v3",
         action_space=SIMPLE_MOVEMENT,
         render_mode="human",
+        skip=skip,
     )
 
     print("✅ Environment Created! Game Window Will Appear")
@@ -140,7 +148,7 @@ def main():
     model = load_model(args.model_path, args.algorithm)
 
     # Create environment
-    env = create_eval_environment()
+    env = create_eval_environment(skip=args.skip)
 
     # Run evaluation episodes
     print(f"\n🏃 Running {args.num_episodes} evaluation episodes...")

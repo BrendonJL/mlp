@@ -277,7 +277,7 @@ PPO training ran for 2M steps (~10.2 hours) but the policy collapsed after 800k 
 - **Monitoring is critical**: Without proper logging, policy collapse went undetected for hours
 - **Value loss spikes**: Periodic spikes to 30-50 were warning signs of instability
 
-### Phase 5: Infrastructure Fixes, Reward Shaping & Hyperparameter Tuning ⏳ IN PROGRESS (Jan 11-13, 2026)
+### Phase 5: Infrastructure Fixes, Reward Shaping & Hyperparameter Tuning ✅ COMPLETE (Jan 11-17, 2026)
 
 **Part A: Fix Infrastructure (Prerequisites)** ✅ COMPLETE
 
@@ -335,7 +335,26 @@ PPO training ran for 2M steps (~10.2 hours) but the policy collapsed after 800k 
 - [x] Create `configs/ppo_v4.yaml` with frame skip enabled ✅ 2026-01-15
 - [x] Integrate frame_skip through full config chain (train.py → vec_mario_env → mario_env) ✅ 2026-01-15
 - [x] Run 50k test: Agent **immediately broke 722 barrier!** ✅ 2026-01-15
-- [x] 10M training run launched ⏳ In Progress
+- [x] 10M training run complete ✅ 2026-01-17
+- [x] Evaluate PPO v4 trained model ✅ 2026-01-17
+- [x] Update comparison notebook with PPO v4 results ✅ 2026-01-17
+
+**PPO v4 FINAL RESULTS - MASSIVE BREAKTHROUGH! 🚀**
+
+| Metric | DQN (2M) | PPO v3 (10M) | **PPO v4 (10M+Skip)** |
+|--------|----------|--------------|----------------------|
+| Avg Distance | 1,024 px | 1,319 px | **2,725 px** 🏆 |
+| Max Distance | 1,673 px | 1,674 px | **2,757 px** 🏆 |
+| Avg Reward | 1,920 | 2,025 | **6,210** 🏆 |
+| Episodes | 785 | 4,684 | **18,985** |
+| Level Progress | 31% | 40% | **83%** |
+
+**Key Achievement:** PPO v4 reaches 83% of the level consistently! That's 2.07x further than PPO v3 and 2.66x further than DQN.
+
+**New Barrier Identified: ~2,700 Pixels**
+- Agent consistently reaches 2,470-2,757 pixels (tight 287px range)
+- This indicates a reliable strategy up to a specific obstacle
+- Next step: PPO v5 with SpeedrunRewardWrapper for cleaner reward signal
 
 **Early Test Results (50k steps) - BREAKTHROUGH!**
 | Episode | Distance | Reward | Notes |
@@ -377,6 +396,9 @@ class SkipFrameWrapper(gym.Wrapper):
 **Config Chain:**
 `ppo_v4.yaml (frame_skip: 4)` → `train.py` → `make_vec_mario_env(skip=)` → `make_mario_env(skip=)` → `SkipFrameWrapper(env, skip=)`
 
+**Reward Investigation Results:**
+During training, noticed suspicious reward values where different distances showed similar rewards. Root cause: base game reward (score/coins) was adding noise to the shaped rewards. Solution for v5: `SpeedrunRewardWrapper` completely replaces base game reward with pure progress-based signal.
+
 **PPO v2 Results (2M steps):**
 
 - DQN still outperformed: avg 1,024 px vs PPO's 687 px
@@ -397,12 +419,15 @@ class SkipFrameWrapper(gym.Wrapper):
 - `configs/ppo_v2.yaml` - Tuned PPO configuration
 - `configs/ppo_v3.yaml` - 10M step config with LR scheduler
 - `configs/ppo_v4.yaml` - Frame skip configuration (skip=4)
-- `src/environments/wrappers.py` - `RewardShapingWrapper`, `SkipFrameWrapper`
+- `configs/ppo_v5.yaml` - SpeedrunRewardWrapper configuration (prepared for next run)
+- `models/ppo_v4_world1-1_final.zip` - Best model yet (83% level progress)
+- `src/environments/wrappers.py` - `RewardShapingWrapper`, `SkipFrameWrapper`, `SpeedrunRewardWrapper`
 - `src/environments/mario_env.py` - Added `skip` parameter, integrated `SkipFrameWrapper`
 - `src/environments/vec_mario_env.py` - Added `VecMonitor` wrapping, `skip` parameter passthrough
 - `src/training/callbacks.py` - Fixed vectorized environment iteration
 - `src/training/train.py` - Added `linear_schedule()`, reads `frame_skip` from config
-- `notebooks/03_ppo_vs_dqn_comparison.ipynb` - Full analysis notebook
+- `notebooks/03_ppo_vs_dqn_comparison.ipynb` - Full analysis notebook with all 5 agents
+- `docs/images/v4mlppics/` - PPO v4 visualization images
 
 **Key Learnings:**
 

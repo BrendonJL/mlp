@@ -102,12 +102,14 @@ def main():
 
     print("🎮 Creating Mario Environment(s)")
     frame_skip = config["environment"].get("frame_skip", 4)
+    reward_wrapper = config["environment"].get("reward_wrapper", "standard")
     if algorithm == "PPO":
         env = make_vec_mario_env(
             game_version=config["environment"]["game"],
             action_space=SIMPLE_MOVEMENT,
             n_envs=hyperparams["n_envs"],
             skip=frame_skip,
+            reward_wrapper=reward_wrapper,
         )
     elif algorithm == "DQN":
         env = make_mario_env(
