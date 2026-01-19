@@ -1,8 +1,10 @@
-import gym
-import numpy as np
-from gym import spaces
-import cv2
 from collections import deque
+from typing import Any
+
+import cv2
+import gym  # type: ignore[import-untyped]
+import numpy as np
+from gym import spaces  # type: ignore[import-untyped]
 
 
 class CompatibilityWrapper(gym.Wrapper):
@@ -22,20 +24,18 @@ class CompatibilityWrapper(gym.Wrapper):
         else:
             return result, {}  # Convert obs -> (obs, {})
 
-    def step(self, action):
+    def step(self, action: Any) -> tuple[Any, float, bool, bool, dict[str, Any]]:
         # Call underlying environment
-        result = self.env.step(action)
+        result: tuple[Any, ...] = self.env.step(action)
 
         # Handle old gym API (4 values) vs new gymnasium API (5 values)
         if len(result) == 4:
             obs, reward, done, info = result
-            # Convert to new API: done -> (terminated, truncated)
             terminated = done
             truncated = False
             return obs, reward, terminated, truncated, info
         else:
-            # Already new API
-            return result
+            return result  # type: ignore[return-value]
 
 
 class SkipFrameWrapper(gym.Wrapper):
@@ -57,7 +57,7 @@ class SkipFrameWrapper(gym.Wrapper):
         return (obs, total_reward, terminated, truncated, info)
 
 
-class GrayscaleWrapper(gym.ObservationWrapper):
+class GrayscaleWrapper(gym.ObservationWrapper):  # type: ignore[misc]
     def __init__(self, env):
         super().__init__(env)
         self.observation_space = spaces.Box(
@@ -71,7 +71,7 @@ class GrayscaleWrapper(gym.ObservationWrapper):
         return greyscale.astype(np.uint8)
 
 
-class ResizeWrapper(gym.ObservationWrapper):
+class ResizeWrapper(gym.ObservationWrapper):  # type: ignore[misc]
     def __init__(self, env, size=84):
         super().__init__(env)
         self.size = size
@@ -90,7 +90,7 @@ class ResizeWrapper(gym.ObservationWrapper):
         return resized.astype(np.uint8)
 
 
-class NormalizeWrapper(gym.ObservationWrapper):
+class NormalizeWrapper(gym.ObservationWrapper):  # type: ignore[misc]
     def __init__(self, env):
         super().__init__(env)
         self.observation_space = spaces.Box(
@@ -102,7 +102,7 @@ class NormalizeWrapper(gym.ObservationWrapper):
         return normalized.astype(np.float32)
 
 
-class FrameStackWrapper(gym.ObservationWrapper):
+class FrameStackWrapper(gym.ObservationWrapper):  # type: ignore[misc]
     def __init__(self, env, num_stack=4):
         super().__init__(env)
         self.num_stack = num_stack
@@ -115,16 +115,9 @@ class FrameStackWrapper(gym.ObservationWrapper):
         )
 
     def reset(self, **kwargs):
-        result = self.env.reset(**kwargs)
+        obs, info = self.env.reset(**kwargs)
 
-        # Handle both old and new Gym API
-        if isinstance(result, tuple):
-            obs, info = result
-        else:
-            obs = result
-            info = {}
-
-        # Initialize frame buffer
+        # Initialize frame buffer with copies of first observation
         for _ in range(self.num_stack):
             self.frames.append(obs)
 
@@ -210,30 +203,15 @@ class RewardShapingWrapper(gym.Wrapper):
 
 
 class SpeedrunRewardWrapper(gym.Wrapper):
-    """
-    Speedrun-focused reward shaping that IGNORES base game rewards.
-
-    For speedrunning, coins/enemies/score don't matter - only progress and time.
-    This wrapper completely replaces the base game reward with pure progress-based rewards.
-
-    Args:
-        env: The environment to wrap
-        forward_bonus: Reward per pixel moved right (default: 1.0)
-        backward_penalty: Penalty per pixel moved left (default: 0.4, moderate for speedrun tricks)
-        idle_penalty: Penalty for not moving (default: 1.0)
-        death_penalty: Penalty for losing a life (default: 200)
-        completion_bonus: Bonus for capturing the flag (default: 1000)
-        max_stuck_steps: End episode if stuck for this many steps (default: 300)
-    """
-
     def __init__(
         self,
         env,
-        forward_bonus=1.0,
-        backward_penalty=0.4,
-        idle_penalty=1.0,
-        death_penalty=200.0,
-        completion_bonus=1000.0,
+        forward_bonus=0.1,  # Scaled down 10x for value function stability
+        backward_penalty=0.0,  # Disabled - with RIGHT_ONLY, backward is involuntary physics
+        idle_penalty=0.02,  # Low - standing still is okay
+        death_penalty=5.0,  # Scaled down 10x
+        completion_bonus=100.0,  # Scaled down 10x
+        base_reward_scale=0.1,  # Scale down base game rewards (vietnh1009 uses /10)
         max_stuck_steps=300,
     ):
         super().__init__(env)
@@ -242,19 +220,22 @@ class SpeedrunRewardWrapper(gym.Wrapper):
         self.idle_penalty = idle_penalty
         self.death_penalty = death_penalty
         self.completion_bonus = completion_bonus
+        self.base_reward_scale = base_reward_scale
         self.max_stuck_steps = max_stuck_steps
         self.prev_x_pos = 0
         self.prev_life = 2
         self.stuck_count = 0
+        # Milestones scaled down 10x for value function stability
         self.milestones = {
-            650: 300,
-            900: 400,
-            1200: 500,
-            1600: 600,
-            2000: 700,
-            2700: 800,
-            3154: 900,
-            3200: 1000,
+            650: 2.5,
+            900: 4.0,
+            1200: 5.0,
+            1600: 7.5,
+            2000: 10.0,
+            2400: 15.0,
+            2700: 22.5,
+            3000: 35.0,
+            3154: 40.0,
         }
         self.reached_milestones = set()
 
@@ -264,34 +245,50 @@ class SpeedrunRewardWrapper(gym.Wrapper):
         self.prev_life = info.get("life", 2)
         self.stuck_count = 0
         self.reached_milestones = set()
+        # Cumulative reward tracking for debugging
+        self.cumulative_base = 0.0
+        self.cumulative_forward = 0.0
+        self.cumulative_backward = 0.0
+        self.cumulative_idle = 0.0
+        self.cumulative_death = 0.0
+        self.cumulative_milestone = 0.0
         return obs, info
 
     def step(self, action):
-        obs, reward, terminated, truncated, info = self.env.step(action)
-        reward = 0.0
+        obs, raw_base_reward, terminated, truncated, info = self.env.step(action)
+        base_reward = (
+            raw_base_reward * self.base_reward_scale
+        )  # Scale down base game rewards
         current_x_pos = info["x_pos"]
         current_life = info["life"]
         x_delta = current_x_pos - self.prev_x_pos
         flag_get = info["flag_get"]
-        completion_bonus = self.completion_bonus
+
+        # Track reward components for debugging
+        forward_reward = 0.0
+        backward_reward = 0.0
+        idle_reward = 0.0
+        death_reward = 0.0
+        milestone_reward = 0.0
+        completion_reward = 0.0
 
         if x_delta > 0:
-            reward += self.forward_bonus * x_delta
+            forward_reward = self.forward_bonus * x_delta
             self.stuck_count = 0
         if x_delta < 0:
-            reward -= self.backward_penalty * abs(x_delta)
+            backward_reward = -self.backward_penalty * abs(x_delta)
             self.stuck_count = 0
         if x_delta == 0:
-            reward -= self.idle_penalty
+            idle_reward = -self.idle_penalty
             self.stuck_count += 1
 
         if current_life < self.prev_life:
-            reward -= self.death_penalty
+            death_reward = -self.death_penalty
 
         # Milestone bonuses for reaching new x positions
         for threshold, bonus in self.milestones.items():
             if current_x_pos >= threshold and threshold not in self.reached_milestones:
-                reward += bonus
+                milestone_reward += bonus
                 self.reached_milestones.add(threshold)
 
         # Early termination if stuck too long
@@ -299,21 +296,50 @@ class SpeedrunRewardWrapper(gym.Wrapper):
             terminated = True
 
         if flag_get:
-            reward += completion_bonus
+            completion_reward = self.completion_bonus
+
+        # Calculate total shaped reward
+        shaped_reward = (
+            forward_reward
+            + backward_reward
+            + idle_reward
+            + death_reward
+            + milestone_reward
+            + completion_reward
+        )
+        total_reward = base_reward + shaped_reward
+
+        # Accumulate for episode totals
+        self.cumulative_base += base_reward
+        self.cumulative_forward += forward_reward
+        self.cumulative_backward += backward_reward
+        self.cumulative_milestone += milestone_reward
+
+        # Add cumulative reward breakdown to info for debugging
+        info["reward_breakdown"] = {
+            "base_game": round(self.cumulative_base, 1),
+            "forward": round(self.cumulative_forward, 1),
+            "backward": round(self.cumulative_backward, 1),
+            "idle": round(self.cumulative_idle, 1),
+            "death": round(self.cumulative_death, 1),
+            "milestone": round(self.cumulative_milestone, 1),
+            "completion": completion_reward,  # Only at end, no need to accumulate
+        }
 
         self.prev_x_pos = current_x_pos
         self.prev_life = current_life
 
-        return obs, reward, terminated, truncated, info
+        return obs, total_reward, terminated, truncated, info
 
 
-class TransposeWrapper(gym.ObservationWrapper):
+class TransposeWrapper(gym.ObservationWrapper):  # type: ignore[misc]
     """Transpose observation from (H, W, C) to (C, H, W) for PyTorch."""
 
     def __init__(self, env):
         super().__init__(env)
         # Get original shape (H, W, C)
         obs_shape = self.env.observation_space.shape
+        assert obs_shape is not None, "observation_space.shape cannot be None"
         # Transpose to (C, H, W)
         new_shape = (obs_shape[2], obs_shape[0], obs_shape[1])
 
@@ -341,7 +367,7 @@ if __name__ == "__main__":
     env = FrameStackWrapper(env)
 
     # Reset and check observation
-    obs = env.reset()
+    obs, info = env.reset()
     print(f"Observation shape: {obs.shape}")  # Should be (84, 84, 4)
     print(f"Observation dtype: {obs.dtype}")
     print(f"Min: {obs.min():.4f}, Max: {obs.max():.4f}")  # Should be 0.0-1.0

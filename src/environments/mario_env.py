@@ -1,16 +1,23 @@
 import gym_super_mario_bros
+from gym_super_mario_bros.actions import RIGHT_ONLY, SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
+
 from src.environments.wrappers import (
     CompatibilityWrapper,
-    SkipFrameWrapper,
-    RewardShapingWrapper,
+    FrameStackWrapper,
     GrayscaleWrapper,
     ResizeWrapper,
-    FrameStackWrapper,
+    RewardShapingWrapper,
+    SkipFrameWrapper,
     SpeedrunRewardWrapper,
     TransposeWrapper,
 )
+
+# Map config string to action space
+ACTION_SPACES = {
+    "SIMPLE_MOVEMENT": SIMPLE_MOVEMENT,
+    "RIGHT_ONLY": RIGHT_ONLY,
+}
 
 
 def make_mario_env(

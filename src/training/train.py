@@ -1,16 +1,17 @@
 import argparse
 import subprocess
 import sys
+
 import torch
-import wandb
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from stable_baselines3 import DQN, PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
-from src.utils.config_loader import load_config
-from src.utils import db_logger
-from src.environments.mario_env import make_mario_env
+
+import wandb
+from src.environments.mario_env import ACTION_SPACES, make_mario_env
 from src.environments.vec_mario_env import make_vec_mario_env
-from src.training.callbacks import WandbCallback, DatabaseCallback
+from src.training.callbacks import DatabaseCallback, WandbCallback
+from src.utils import db_logger
+from src.utils.config_loader import load_config
 
 
 def linear_schedule(initial_value: float):
@@ -18,7 +19,7 @@ def linear_schedule(initial_value: float):
     Linear learning rate schedule that anneals from initial_value to 0.
 
     Args:
-        initial_value: Starting learning rate
+        initial_value: Starting learning rateuu
 
     Returns:
         A function that takes progress_remaining (1.0 -> 0.0) and returns LR
@@ -26,6 +27,13 @@ def linear_schedule(initial_value: float):
 
     def func(progress_remaining: float) -> float:
         return progress_remaining * initial_value
+
+    return func
+
+
+def linear_schedule_with_floor(initial_value: float, final_value: float):
+    def func(progress_remaining: float) -> float:
+        return final_value + progress_remaining * (initial_value - final_value)
 
     return func
 
@@ -103,17 +111,21 @@ def main():
     print("🎮 Creating Mario Environment(s)")
     frame_skip = config["environment"].get("frame_skip", 4)
     reward_wrapper = config["environment"].get("reward_wrapper", "standard")
+    action_space_name = config["environment"].get("action_space", "SIMPLE_MOVEMENT")
+    action_space = ACTION_SPACES[action_space_name]
+    print(f"🕹️  Action space: {action_space_name} ({len(action_space)} actions)")
+
     if algorithm == "PPO":
         env = make_vec_mario_env(
             game_version=config["environment"]["game"],
-            action_space=SIMPLE_MOVEMENT,
+            action_space=action_space,
             n_envs=hyperparams["n_envs"],
             skip=frame_skip,
             reward_wrapper=reward_wrapper,
         )
     elif algorithm == "DQN":
         env = make_mario_env(
-            game_version=config["environment"]["game"], action_space=SIMPLE_MOVEMENT
+            game_version=config["environment"]["game"], action_space=action_space
         )
     else:
         raise ValueError("The only supported algs are DQN or PPO")
@@ -127,15 +139,23 @@ def main():
         else:
             lr = hyperparams["learning_rate"]
 
+        if hyperparams.get("use_clip_scheduler", False):
+            clip_initial = hyperparams["clip_range"]
+            clip_final = hyperparams.get("clip_range_final", 0.05)
+            clip_range = linear_schedule_with_floor(clip_initial, clip_final)
+            print(f"📉 Using clip range scheduler: {clip_initial} → {clip_final}")
+        else:
+            clip_range = hyperparams["clip_range"]
+
         model = PPO(
             policy=hyperparams["policy"],
-            env=env,
+            env=env,  # type: ignore[arg-type]
             learning_rate=lr,
             batch_size=hyperparams["batch_size"],
             gamma=hyperparams["gamma"],
             n_steps=hyperparams["n_steps"],
             n_epochs=hyperparams["n_epochs"],
-            clip_range=hyperparams["clip_range"],
+            clip_range=clip_range,
             ent_coef=hyperparams["ent_coef"],
             gae_lambda=hyperparams["gae_lambda"],
             verbose=1,
@@ -143,7 +163,7 @@ def main():
     elif algorithm == "DQN":
         model = DQN(
             policy=hyperparams["policy"],
-            env=env,
+            env=env,  # type: ignore[arg-type]
             learning_rate=hyperparams["learning_rate"],
             buffer_size=hyperparams["buffer_size"],
             learning_starts=hyperparams["learning_starts"],

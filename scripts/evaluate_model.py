@@ -8,9 +8,15 @@ import statistics
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT  # noqa: E402
+from gym_super_mario_bros.actions import RIGHT_ONLY, SIMPLE_MOVEMENT
+
+# Map string to action space for CLI argument
+ACTION_SPACES = {
+    "SIMPLE_MOVEMENT": SIMPLE_MOVEMENT,
+    "RIGHT_ONLY": RIGHT_ONLY,
+}
 from stable_baselines3 import DQN, PPO  # noqa: E402
 
 from src.environments.mario_env import make_mario_env  # noqa: E402
@@ -48,6 +54,21 @@ def parse_args():
         help="Frame skip value (must match training config)",
     )
 
+    parser.add_argument(
+        "--action-space",
+        type=str,
+        default="RIGHT_ONLY",
+        choices=["SIMPLE_MOVEMENT", "RIGHT_ONLY"],
+        help="Action space (must match training config, default: RIGHT_ONLY)",
+    )
+
+    parser.add_argument(
+        "--game-version",
+        type=str,
+        default="SuperMarioBros-v0",
+        help="Game version (v0 for better graphics, v3 for training, default: v0)",
+    )
+
     return parser.parse_args()
 
 
@@ -63,13 +84,21 @@ def load_model(model_path, algorithm):
     return model
 
 
-def create_eval_environment(skip=4):
+def create_eval_environment(
+    skip=4, action_space="RIGHT_ONLY", game_version="SuperMarioBros-v0"
+):
     """Create Mario environment for evaluation with rendering enabled."""
     print("🎮 Creating Evaluation Environment")
+    print(f"   Game: {game_version}")
+    print(f"   Action Space: {action_space}")
+    print(f"   Frame Skip: {skip}")
+
+    # Convert string to action space
+    action_space_obj = ACTION_SPACES[action_space]
 
     env = make_mario_env(
-        game_version="SuperMarioBros-v3",
-        action_space=SIMPLE_MOVEMENT,
+        game_version=game_version,
+        action_space=action_space_obj,
         render_mode="human",
         skip=skip,
     )
@@ -90,9 +119,9 @@ def evaluate_episode(model, env, episode_num):
     Returns:
         dict: Episode metrics (reward, distance, flag_get, etc.)
     """
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"Episode {episode_num}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     # Reset environment
     obs, info = env.reset()
@@ -105,7 +134,7 @@ def evaluate_episode(model, env, episode_num):
     # Episode loop - agent plays until done
     # Timeout at 5000 steps (reasonable for trained agent)
     while not done and steps < 5000:
-        action, _states = model.predict(obs, deterministic=False)
+        action, _ = model.predict(obs, deterministic=False)
         action = int(action)  # Convert numpy array to Python int
         obs, reward, terminated, truncated, info = env.step(action)
         total_reward += reward
@@ -148,7 +177,11 @@ def main():
     model = load_model(args.model_path, args.algorithm)
 
     # Create environment
-    env = create_eval_environment(skip=args.skip)
+    env = create_eval_environment(
+        skip=args.skip,
+        action_space=args.action_space,
+        game_version=args.game_version,
+    )
 
     # Run evaluation episodes
     print(f"\n🏃 Running {args.num_episodes} evaluation episodes...")
@@ -229,19 +262,19 @@ def main():
     print("\n📊 Comparison to Random Baseline:")
     print("   Random avg reward: ~380")
     print(f"   Trained avg reward: {avg_reward:.1f}")
-    print(f"   Improvement: {(avg_reward/380):.1f}x better!")
+    print(f"   Improvement: {(avg_reward / 380):.1f}x better!")
     print("\n   Random max distance: 434 pixels")
     print(f"   Trained max distance: {max_distance} pixels")
-    print(f"   Improvement: {(max_distance/434):.1f}x further!")
+    print(f"   Improvement: {(max_distance / 434):.1f}x further!")
 
     # Comparison to DQN (from Phase 3)
     print("\n📊 Comparison to DQN Baseline (2M steps):")
     print("   DQN avg reward: ~1920")
     print(f"   PPO avg reward: {avg_reward:.1f}")
     if avg_reward > 1920:
-        print(f"   🎉 PPO is {(avg_reward/1920):.2f}x better!")
+        print(f"   🎉 PPO is {(avg_reward / 1920):.2f}x better!")
     else:
-        print(f"   DQN was {(1920/avg_reward):.2f}x better")
+        print(f"   DQN was {(1920 / avg_reward):.2f}x better")
     print("\n   DQN avg distance: ~1024 pixels")
     print(f"   PPO avg distance: {avg_distance:.1f} pixels")
     print("\n   DQN max distance: ~1673 pixels")

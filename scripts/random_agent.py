@@ -5,14 +5,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import gym_super_mario_bros  # noqa: E402
-import imageio  # noqa: E402
-import wandb  # noqa: E402
-from tqdm import tqdm  # noqa: E402
+import gym_super_mario_bros
+import imageio
+from tqdm import tqdm
 
-from src.utils import db_logger  # noqa: E402
+import wandb
+from src.utils import db_logger
 
 wandb.init(
     project="mario-rl-agent",

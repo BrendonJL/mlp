@@ -2,11 +2,13 @@
 Database logging utilities for Mario RL experiments.
 """
 
-from psycopg2 import pool
-from psycopg2.extensions import cursor as Cursor
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import TYPE_CHECKING, Any
 
+from psycopg2 import pool
+
+if TYPE_CHECKING:
+    from psycopg2.extensions import cursor as Cursor
 
 _connection_pool = None
 
@@ -44,12 +46,12 @@ def create_experiment(
     git_commit_hash: str,
     python_version: str,
     pytorch_version: str,
-    notes: Optional[str] = None,
+    notes: str | None = None,
 ) -> int:
     """Create a new experiment record in the database."""
     pool = get_connection_pool()
     conn = pool.getconn()
-    cursor: Optional[Cursor] = None
+    cursor: Cursor | None = None
 
     try:
         cursor = conn.cursor()
@@ -96,11 +98,11 @@ def create_experiment(
         pool.putconn(conn)
 
 
-def log_hyperparameters(experiment_id: int, hyperparams_dict: Dict[str, Any]):
+def log_hyperparameters(experiment_id: int, hyperparams_dict: dict[str, Any]):
     """Log hyperparameters for an experiment."""
     pool = get_connection_pool()
     conn = pool.getconn()
-    cursor: Optional[Cursor] = None
+    cursor: Cursor | None = None
 
     try:
         cursor = conn.cursor()
@@ -130,11 +132,11 @@ def log_hyperparameters(experiment_id: int, hyperparams_dict: Dict[str, Any]):
         pool.putconn(conn)
 
 
-def log_episode(experiment_id: int, episode_data: Dict[str, Any]):
+def log_episode(experiment_id: int, episode_data: dict[str, Any]):
     """Log results from a completed episode."""
     pool = get_connection_pool()
     conn = pool.getconn()
-    cursor: Optional[Cursor] = None
+    cursor: Cursor | None = None
 
     try:
         cursor = conn.cursor()
@@ -202,7 +204,7 @@ def update_experiment(experiment_id: int, status: str, total_episodes: int):
     """Update experiment with final statistics when training completes."""
     pool = get_connection_pool()
     conn = pool.getconn()
-    cursor: Optional[Cursor] = None
+    cursor: Cursor | None = None
 
     try:
         cursor = conn.cursor()
@@ -232,11 +234,11 @@ def update_experiment(experiment_id: int, status: str, total_episodes: int):
         pool.putconn(conn)
 
 
-def log_training_metrics(experiment_id: int, metrics_data: Dict[str, Any]):
+def log_training_metrics(experiment_id: int, metrics_data: dict[str, Any]):
     """Log periodic training metrics."""
     pool = get_connection_pool()
     conn = pool.getconn()
-    cursor: Optional[Cursor] = None
+    cursor: Cursor | None = None
 
     try:
         cursor = conn.cursor()

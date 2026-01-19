@@ -397,7 +397,7 @@ class SkipFrameWrapper(gym.Wrapper):
 `ppo_v4.yaml (frame_skip: 4)` → `train.py` → `make_vec_mario_env(skip=)` → `make_mario_env(skip=)` → `SkipFrameWrapper(env, skip=)`
 
 **Reward Investigation Results:**
-During training, noticed suspicious reward values where different distances showed similar rewards. Root cause: base game reward (score/coins) was adding noise to the shaped rewards. Solution for v5: `SpeedrunRewardWrapper` completely replaces base game reward with pure progress-based signal.
+During training, noticed suspicious reward values where different distances showed similar rewards. Root cause: base game reward (score/coins) was adding noise to the shaped rewards. Initial solution for v5: `SpeedrunRewardWrapper` completely replaces base game reward with pure progress-based signal. **However, this approach failed** - see "PPO v5 Debugging" section below.
 
 **PPO v2 Results (2M steps):**
 
@@ -428,6 +428,7 @@ During training, noticed suspicious reward values where different distances show
 - `src/training/train.py` - Added `linear_schedule()`, reads `frame_skip` from config
 - `notebooks/03_ppo_vs_dqn_comparison.ipynb` - Full analysis notebook with all 5 agents
 - `docs/images/v4mlppics/` - PPO v4 visualization images
+- `scripts/analyze_experiment.py` - Database analysis script for reward debugging
 
 **Key Learnings:**
 
@@ -441,6 +442,36 @@ During training, noticed suspicious reward values where different distances show
 - **Frame skip is transformative**: Reduces exploration difficulty for temporal action sequences (like holding jump) by the skip factor. Standard practice in Atari/game RL.
 - **Wrapper order matters**: SkipFrame should come early in pipeline (after API compatibility, before preprocessing) to avoid wasting computation on skipped frames
 - **Defensive programming**: Use `max(skip, 1)` to ensure skip is never 0, preventing division/loop edge cases
+
+**PPO v5 Debugging (Jan 18, 2026) - Reward Engineering Deep Dive:**
+
+Multiple failed runs attempting to use pure custom reward shaping without base game rewards.
+
+**The Oscillation Exploit:**
+- SpeedrunRewardWrapper initially set `reward = 0.0` to completely replace base game rewards
+- With forward_bonus=1.0 and backward_penalty=0.4, oscillation became profitable:
+  - Move right 100px (+100) then left 100px (-40) = +60 reward for staying in place!
+- Agents learned to oscillate back and forth farming infinite reward
+- Diagnosis: Built `scripts/analyze_experiment.py` to query PostgreSQL for anomalies
+- Found episodes with 176 distance getting 7,000+ reward
+
+**Key Reward Engineering Learnings:**
+
+1. **Asymmetric penalties create exploits**: backward_penalty must be ≥ forward_bonus to prevent oscillation arbitrage
+2. **Base game rewards encode domain knowledge**: Coins act as breadcrumbs, enemy kills teach engagement strategies. Pure x_delta reward says WHAT is good but not HOW to achieve it.
+3. **Reward magnitude affects value function stability**: Large per-step rewards (1.0 vs 0.1) cause high value_loss and training instability
+4. **"Learned helplessness"**: If forward progress always leads to death (-200 penalty), agent prefers slow oscillation bleeding over "certain death" from pushing forward
+5. **Policy collapse indicators**: entropy_loss approaching 0, repeated exact same distance/reward values, approx_kl > 0.1
+
+**Bug Found:** Clip range scheduler was never applied! Line 153 of train.py used `hyperparams["clip_range"]` instead of the `clip_range` variable.
+
+**v5 Final Configuration (In Progress):**
+- Base game rewards KEPT (not zeroed out)
+- forward_bonus=0.5, backward_penalty=0.6 (prevents oscillation)
+- death_penalty=50 (reduced from 200)
+- ent_coef=0.1 (prevents entropy collapse)
+- learning_rate=0.00015 (reduced for stability)
+- clip_range annealing 0.2 → 0.05 (now actually working)
 
 ### Phase 6: Imitation Learning ⏳ NEXT (Jan 2026)
 

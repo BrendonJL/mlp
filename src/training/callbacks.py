@@ -1,6 +1,7 @@
+from stable_baselines3.common.callbacks import BaseCallback
+
 import wandb
 from src.utils import db_logger
-from stable_baselines3.common.callbacks import BaseCallback
 
 
 class WandbCallback(BaseCallback):
@@ -60,4 +61,13 @@ class DatabaseCallback(BaseCallback):
                     db_logger.log_episode(
                         experiment_id=self.experiment_id, episode_data=episode_data
                     )
+
+                    # Print reward breakdown if available (for debugging)
+                    breakdown = info.get("reward_breakdown")
+                    if breakdown:
+                        print(
+                            f"   💰 base={breakdown['base_game']}, fwd={breakdown['forward']}, "
+                            f"back={breakdown['backward']}, idle={breakdown['idle']}, "
+                            f"death={breakdown['death']}, mile={breakdown['milestone']}"
+                        )
         return True

@@ -1,32 +1,34 @@
 experiment:
   name: "ppo_v5_world1-1"
-  description: "PPO v5: 2M steps with linear LR scheduler, clip 0.15, stuck timeout 300"
+  description: "PPO v5: 5M This is my like 10th failed v5 run lol FML were getting close"
   algorithm: "PPO"
 
 environment:
   game: "SuperMarioBros-v3"
-  action_space: "SIMPLE_MOVEMENT"
+  action_space: "RIGHT_ONLY"
   render_mode: "rgb_array"
   frame_skip: 4
   reward_wrapper: "speedrun"
 
 ppo_hyperparameters:
   policy: CnnPolicy
-  learning_rate: 0.00003
-  use_lr_scheduler: true # Linear annealing to 0
-  gamma: 0.99
-  n_steps: 1024
-  n_epochs: 10 # Increased from 5 for more data reuse
-  batch_size: 128
-  clip_range: 0.15 # Reduced from 0.2 (Stanford's success)
-  ent_coef: 0.02
-  gae_lambda: 0.95
-  n_envs: 4
+  learning_rate: 0.0001 # Same as vietnh1009
+  use_lr_scheduler: true # Keep our scheduler
+  gamma: 0.9 # vietnh1009 uses shorter horizon
+  n_steps: 512 # vietnh1009 value
+  n_epochs: 10 # vietnh1009 value
+  batch_size: 16 # vietnh1009 value (tiny!)
+  clip_range: 0.2 # vietnh1009 value
+  use_clip_scheduler: true # Keep our scheduler
+  clip_range_final: 0.05
+  ent_coef: 0.01 # vietnh1009 value (much lower)
+  gae_lambda: 1.0 # vietnh1009 uses no GAE smoothing
+  n_envs: 4 # Keep ours
 
 training:
-  total_timesteps: 2000000
-  save_freq: 10000
-  eval_freq: 5000
+  total_timesteps: 5000000 # vietnh1009 value
+  save_freq: 100000
+  eval_freq: 10000
 
 paths:
   model_dir: "models/"
@@ -41,4 +43,4 @@ database:
 
 wandb:
   project: "mario-rl-agent"
-  tags: ["ppo", "phase-5", "v5", "lr-scheduler", "2M-steps", "frame-skip"]
+  tags: ["ppo", "phase-5", "v5", "lr-scheduler", "10M-steps", "frame-skip"]
