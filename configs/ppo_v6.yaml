@@ -1,0 +1,55 @@
+experiment:
+  name: "ppo_v6_world1-1"
+  description: "PPO v6: v4 foundation + clip scheduler + slightly higher LR. Reverting from v5 failures."
+  algorithm: "PPO"
+
+environment:
+  game: "SuperMarioBros-v3"
+  action_space: "SIMPLE_MOVEMENT" # Back to v4's action space
+  render_mode: "rgb_array"
+  frame_skip: 4
+  reward_wrapper: "standard" # Back to RewardShapingWrapper
+
+ppo_hyperparameters:
+  policy: CnnPolicy
+  learning_rate: 0.00005 # Slightly higher than v4 lower v1
+  use_lr_scheduler: true
+  gamma: 0.99 # Back to v4's longer horizon
+  n_steps: 1024 # Back to v4
+  n_epochs: 10
+  batch_size: 128 # Back to v4
+  clip_range: 0.15 # Start at v4's value
+  use_clip_scheduler: true # NEW: Add clip annealing from v5
+  clip_range_final: 0.05 # Anneal down for late-training stability
+  ent_coef: 0.03 # Back to v4's stable value
+  gae_lambda: 0.95 # Back to v4's smoothing
+  n_envs: 4
+
+training:
+  total_timesteps: 10000000
+  save_freq: 500000
+  eval_freq: 10000
+
+paths:
+  model_dir: "models/"
+  log_dir: "data/logs/"
+  checkpoint_dir: "models/checkpoints/"
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "mario_rl_db"
+  user: "mario_rl_user"
+
+wandb:
+  project: "mario-rl-agent"
+  tags:
+    [
+      "ppo",
+      "phase-5",
+      "v6",
+      "lr-scheduler",
+      "clip-scheduler",
+      "10M-steps",
+      "frame-skip",
+    ]

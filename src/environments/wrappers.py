@@ -332,6 +332,137 @@ class SpeedrunRewardWrapper(gym.Wrapper):
         return obs, total_reward, terminated, truncated, info
 
 
+class SMBGrid:
+    """
+    Extract game state from NES RAM into a simplified 13x16 grid.
+    Based on yumouwei's implementation.
+
+    Grid values:
+      0 = empty
+      1 = tile/block/obstacle
+      2 = Mario
+     -1 = enemy
+    """
+
+    def __init__(self, env):
+        # Traverse wrapper chain to find the NES environment with RAM
+        current = env
+        while hasattr(current, "env"):
+            if hasattr(current, "ram"):
+                break
+            current = current.env
+        self.ram = current.ram
+        self.screen_size_x = 16
+        self.screen_size_y = 13
+
+        # Mario's position from RAM
+        self.mario_level_x = self.ram[0x6D] * 256 + self.ram[0x86]
+        self.mario_x = self.ram[0x3AD]
+        self.mario_y = self.ram[0x3B8] + 16
+
+        self.x_start = self.mario_level_x - self.mario_x
+        self.rendered_screen = self._get_rendered_screen()
+
+    def _tile_loc_to_ram_address(self, x: int, y: int) -> int:
+        """Convert tile grid coordinates to RAM address."""
+        page = x // 16
+        x_loc = x % 16
+        y_loc = page * 13 + y
+        address = 0x500 + x_loc + y_loc * 16
+        return address
+
+    def _get_rendered_screen(self) -> np.ndarray:
+        """Build the 13x16 grid representation from RAM."""
+        rendered_screen = np.zeros((self.screen_size_y, self.screen_size_x))
+        screen_start = int(np.rint(self.x_start / 16))
+
+        # Fill in tiles/blocks
+        for i in range(self.screen_size_x):
+            for j in range(self.screen_size_y):
+                x_loc = (screen_start + i) % (self.screen_size_x * 2)
+                y_loc = j
+                address = self._tile_loc_to_ram_address(x_loc, y_loc)
+
+                if self.ram[address] != 0:
+                    rendered_screen[j, i] = 1
+
+        # Add Mario (value = 2)
+        x_loc = (self.mario_x + 8) // 16
+        y_loc = (self.mario_y - 32) // 16
+        if 0 <= x_loc < 16 and 0 <= y_loc < 13:
+            rendered_screen[y_loc, x_loc] = 2
+
+        # Add enemies (value = -1)
+        for i in range(5):
+            if self.ram[0x0F + i] == 1:  # Enemy drawn flag
+                enemy_x = self.ram[0x6E + i] * 256 + self.ram[0x87 + i] - self.x_start
+                enemy_y = self.ram[0xCF + i]
+                x_loc = (enemy_x + 8) // 16
+                y_loc = (enemy_y + 8 - 32) // 16
+
+                if 0 <= x_loc < 16 and 0 <= y_loc < 13:
+                    rendered_screen[y_loc, x_loc] = -1
+
+        return rendered_screen
+
+
+class RAMObservationWrapper(gym.ObservationWrapper):  # type: ignore[misc]
+    """
+    Replace pixel observations with RAM-based grid observations.
+
+    Uses SMBGrid to create a 13x16 grid representation of the game state.
+    Includes frame stacking for temporal information.
+
+    Output shape: (13 * 16 * n_stack,) = (832,) flattened for MlpPolicy
+    """
+
+    def __init__(self, env, n_stack: int = 4, n_skip: int = 1):
+        super().__init__(env)
+        self.n_stack = n_stack
+        self.n_skip = n_skip
+        self.width = 16
+        self.height = 13
+
+        # Flattened observation for MlpPolicy
+        obs_size = self.height * self.width * self.n_stack
+        self.observation_space = spaces.Box(
+            low=-1.0, high=2.0, shape=(obs_size,), dtype=np.float32
+        )
+
+        # Frame buffer for stacking
+        buffer_size = (self.n_stack - 1) * self.n_skip + 1
+        self.frame_stack = np.zeros((self.height, self.width, buffer_size))
+
+    def reset(self, **kwargs):
+        _, info = self.env.reset(**kwargs)
+
+        # Reset frame buffer
+        buffer_size = (self.n_stack - 1) * self.n_skip + 1
+        self.frame_stack = np.zeros((self.height, self.width, buffer_size))
+
+        # Get initial grid and fill buffer
+        grid = SMBGrid(self.env)
+        frame = grid.rendered_screen
+        for i in range(self.frame_stack.shape[-1]):
+            self.frame_stack[:, :, i] = frame
+
+        # Get stacked observation
+        stacked = self.frame_stack[:, :, :: self.n_skip]
+        return stacked.flatten().astype(np.float32), info
+
+    def observation(self, _obs):  # _obs unused - we read directly from RAM
+        # Shift frames
+        self.frame_stack[:, :, 1:] = self.frame_stack[:, :, :-1]
+
+        # Get new grid
+        grid = SMBGrid(self.env)
+        self.frame_stack[:, :, 0] = grid.rendered_screen
+
+        # Get stacked observation
+        stacked = self.frame_stack[:, :, :: self.n_skip]
+        return stacked.flatten().astype(np.float32)
+
+
 class TransposeWrapper(gym.ObservationWrapper):  # type: ignore[misc]
     """Transpose observation from (H, W, C) to (C, H, W) for PyTorch."""
 

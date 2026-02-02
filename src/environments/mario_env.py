@@ -6,6 +6,7 @@ from src.environments.wrappers import (
     CompatibilityWrapper,
     FrameStackWrapper,
     GrayscaleWrapper,
+    RAMObservationWrapper,
     ResizeWrapper,
     RewardShapingWrapper,
     SkipFrameWrapper,
@@ -26,6 +27,7 @@ def make_mario_env(
     render_mode=None,
     skip=4,
     reward_wrapper="standard",
+    observation_mode="pixel",
 ):
     env = gym_super_mario_bros.make(
         game_version, apply_api_compatibility=True, render_mode=render_mode
@@ -37,10 +39,17 @@ def make_mario_env(
         env = SpeedrunRewardWrapper(env)
     else:
         env = RewardShapingWrapper(env)
-    env = GrayscaleWrapper(env)
-    env = ResizeWrapper(env)
-    # NormalizeWrapper removed - let SB3 handle normalization internally
-    env = FrameStackWrapper(env)
-    env = TransposeWrapper(env)  # Convert (H,W,C) -> (C,H,W) for PyTorch
+
+    # Apply observation wrappers based on mode
+    if observation_mode == "ram":
+        # RAM-based grid observations for MlpPolicy
+        env = RAMObservationWrapper(env)
+    else:
+        # Pixel-based observations for CnnPolicy
+        env = GrayscaleWrapper(env)
+        env = ResizeWrapper(env)
+        # NormalizeWrapper removed - let SB3 handle normalization internally
+        env = FrameStackWrapper(env)
+        env = TransposeWrapper(env)  # Convert (H,W,C) -> (C,H,W) for PyTorch
 
     return env

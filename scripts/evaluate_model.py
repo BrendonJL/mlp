@@ -69,6 +69,22 @@ def parse_args():
         help="Game version (v0 for better graphics, v3 for training, default: v0)",
     )
 
+    parser.add_argument(
+        "--reward-wrapper",
+        type=str,
+        default="standard",
+        choices=["standard", "speedrun"],
+        help="Reward wrapper (standard or speedrun, default: standard)",
+    )
+
+    parser.add_argument(
+        "--observation-mode",
+        type=str,
+        default="pixel",
+        choices=["pixel", "ram"],
+        help="Observation mode (pixel for CnnPolicy, ram for MlpPolicy, default: pixel)",
+    )
+
     return parser.parse_args()
 
 
@@ -85,13 +101,19 @@ def load_model(model_path, algorithm):
 
 
 def create_eval_environment(
-    skip=4, action_space="RIGHT_ONLY", game_version="SuperMarioBros-v0"
+    skip=4,
+    action_space="RIGHT_ONLY",
+    game_version="SuperMarioBros-v0",
+    reward_wrapper="standard",
+    observation_mode="pixel",
 ):
     """Create Mario environment for evaluation with rendering enabled."""
     print("🎮 Creating Evaluation Environment")
     print(f"   Game: {game_version}")
     print(f"   Action Space: {action_space}")
     print(f"   Frame Skip: {skip}")
+    print(f"   Reward Wrapper: {reward_wrapper}")
+    print(f"   Observation Mode: {observation_mode}")
 
     # Convert string to action space
     action_space_obj = ACTION_SPACES[action_space]
@@ -101,6 +123,8 @@ def create_eval_environment(
         action_space=action_space_obj,
         render_mode="human",
         skip=skip,
+        reward_wrapper=reward_wrapper,
+        observation_mode=observation_mode,
     )
 
     print("✅ Environment Created! Game Window Will Appear")
@@ -181,6 +205,8 @@ def main():
         skip=args.skip,
         action_space=args.action_space,
         game_version=args.game_version,
+        reward_wrapper=args.reward_wrapper,
+        observation_mode=args.observation_mode,
     )
 
     # Run evaluation episodes

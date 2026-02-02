@@ -465,15 +465,62 @@ Multiple failed runs attempting to use pure custom reward shaping without base g
 
 **Bug Found:** Clip range scheduler was never applied! Line 153 of train.py used `hyperparams["clip_range"]` instead of the `clip_range` variable.
 
-**v5 Final Configuration (In Progress):**
-- Base game rewards KEPT (not zeroed out)
-- forward_bonus=0.5, backward_penalty=0.6 (prevents oscillation)
-- death_penalty=50 (reduced from 200)
-- ent_coef=0.1 (prevents entropy collapse)
-- learning_rate=0.00015 (reduced for stability)
-- clip_range annealing 0.2 → 0.05 (now actually working)
+**PPO v5 Final Results - FAILURE:**
+- SpeedrunRewardWrapper created **negative reward/distance correlation** (-0.174)
+- Agent learned that going further = less reward
+- RIGHT_ONLY action space too restrictive
+- Avg distance: 556 px (worse than random!)
 
-### Phase 6: Imitation Learning ⏳ NEXT (Jan 2026)
+**PPO v6 (Jan 23, 2026) - Entropy Collapse:**
+
+Attempted to combine v4's working foundation with v5's clip scheduler.
+
+| Parameter | v6 Value |
+|-----------|----------|
+| action_space | SIMPLE_MOVEMENT |
+| reward_wrapper | standard (RewardShaping) |
+| ent_coef | 0.02 → 0.03 (after first failure) |
+| clip_range | 0.15 → 0.05 (scheduler) |
+| learning_rate | 0.00005 |
+
+**v6 Results - FAILURE:**
+- Attempt #1: Killed at 31% (3.1M steps) due to entropy collapse
+- Entropy dropped from -1.13 → -0.08 (14x reduction = deterministic policy)
+- Agent stuck at ~2007 pixels (700px behind v4)
+- Attempt #2 with ent_coef=0.03 also failed
+
+**PPO v7 (Jan 24-26, 2026) - RAM Observations:**
+
+Complete paradigm shift: Instead of pixel observations with CnnPolicy, use RAM-based grid observations with MlpPolicy (based on yumouwei's implementation).
+
+| Parameter | v7 Value |
+|-----------|----------|
+| observation_mode | ram (13x16 grid from NES RAM) |
+| policy | MlpPolicy (vs CnnPolicy) |
+| model_size | 1.5MB (vs 21MB for CNN) |
+| learning_rate | 0.0003 |
+| n_steps | 2048 |
+| batch_size | 64 |
+| ent_coef | 0.01 |
+
+**v7 Implementation:**
+- `SMBGrid` class: Extracts game state from NES RAM into 13x16 grid
+- Grid values: 0=empty, 1=tile/block, 2=Mario, -1=enemy
+- `RAMObservationWrapper`: Frame stacking for temporal info, flattened for MLP
+- Training completed 10M steps (Jan 26, 2026)
+
+**v7 Results:** Evaluation pending
+
+**Phase 5 Artifacts:**
+- `configs/ppo_v2.yaml` through `configs/ppo_v7.yaml`
+- `models/ppo_v4_world1-1_final.zip` - Best CNN-based model (83% level progress)
+- `models/ppo_v7_world1-1_final.zip` - RAM-based model (1.5MB)
+- `src/environments/wrappers.py` - Added `SMBGrid`, `RAMObservationWrapper`
+- `src/environments/mario_env.py` - Added `observation_mode` parameter
+- `src/training/callbacks.py` - Added multi-stage distance tracking
+- `database/schema_migration_02.sql` - Added `max_x_pos`, `final_x_pos` columns
+
+### Phase 6: Imitation Learning ⏳ NEXT (Feb 2026)
 
 **Goal:** Teach the agent speedrunning techniques it can't discover through random exploration.
 

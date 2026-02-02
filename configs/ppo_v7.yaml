@@ -1,0 +1,46 @@
+experiment:
+  name: "ppo_v7_world1-1"
+  description: "PPO v7: RAM observations with MlpPolicy. Based on yumouwei's successful implementation."
+  algorithm: "PPO"
+
+environment:
+  game: "SuperMarioBros-v3"
+  action_space: "SIMPLE_MOVEMENT"
+  render_mode: "rgb_array"
+  frame_skip: 4
+  reward_wrapper: "standard"
+  observation_mode: "ram"  # NEW: Use RAM-based grid observations
+
+ppo_hyperparameters:
+  policy: MlpPolicy  # Changed from CnnPolicy - RAM obs are vectors, not images
+  learning_rate: 0.0003  # yumouwei used default SB3 values
+  use_lr_scheduler: true
+  gamma: 0.99
+  n_steps: 2048  # Default SB3 value
+  n_epochs: 10
+  batch_size: 64  # Default SB3 value
+  clip_range: 0.2
+  use_clip_scheduler: false  # Keep simple for first RAM test
+  ent_coef: 0.01  # Default SB3 value
+  gae_lambda: 0.95
+  n_envs: 4
+
+training:
+  total_timesteps: 10000000
+  save_freq: 500000
+  eval_freq: 10000
+
+paths:
+  model_dir: "models/"
+  log_dir: "data/logs/"
+  checkpoint_dir: "models/checkpoints/"
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "mario_rl_db"
+  user: "mario_rl_user"
+
+wandb:
+  project: "mario-rl-agent"
+  tags: ["ppo", "phase-5", "v7", "ram-observations", "mlp-policy", "10M-steps"]

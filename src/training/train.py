@@ -111,9 +111,11 @@ def main():
     print("🎮 Creating Mario Environment(s)")
     frame_skip = config["environment"].get("frame_skip", 4)
     reward_wrapper = config["environment"].get("reward_wrapper", "standard")
+    observation_mode = config["environment"].get("observation_mode", "pixel")
     action_space_name = config["environment"].get("action_space", "SIMPLE_MOVEMENT")
     action_space = ACTION_SPACES[action_space_name]
     print(f"🕹️  Action space: {action_space_name} ({len(action_space)} actions)")
+    print(f"👁️  Observation mode: {observation_mode}")
 
     if algorithm == "PPO":
         env = make_vec_mario_env(
@@ -122,10 +124,13 @@ def main():
             n_envs=hyperparams["n_envs"],
             skip=frame_skip,
             reward_wrapper=reward_wrapper,
+            observation_mode=observation_mode,
         )
     elif algorithm == "DQN":
         env = make_mario_env(
-            game_version=config["environment"]["game"], action_space=action_space
+            game_version=config["environment"]["game"],
+            action_space=action_space,
+            observation_mode=observation_mode,
         )
     else:
         raise ValueError("The only supported algs are DQN or PPO")

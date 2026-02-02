@@ -146,22 +146,27 @@ def log_episode(experiment_id: int, episode_data: dict[str, Any]):
         reward = episode_data["total_reward"]  # Maps to 'reward' column
         episode_length = episode_data["episode_length"]
         distance_traveled = episode_data["x_pos"]  # Maps to 'distance_traveled' column
+        max_x_pos = episode_data.get("max_x_pos")  # New: max accumulated distance
+        final_x_pos = episode_data.get("final_x_pos")  # New: final accumulated distance
         y_pos = episode_data["y_pos"]
         score = episode_data["score"]
         time = episode_data["time"]
         coins = episode_data["coins"]
         life = episode_data["life"]
         status = episode_data["status"]
-        level_completed = episode_data["flag_get"]  # Maps to 'level_completed' column
+        # level_completed: prefer stage-based detection, fall back to flag_get
+        level_completed = episode_data.get(
+            "level_completed", episode_data.get("flag_get", False)
+        )
         world = episode_data["world"]
         stage = episode_data["stage"]
 
         query = """
             INSERT INTO episodes (
                 experiment_id, episode_number, timestamp, reward, episode_length,
-                distance_traveled, y_pos, score, time, coins, life, status,
-                level_completed, world, stage
-             ) VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                distance_traveled, max_x_pos, final_x_pos, y_pos, score, time,
+                coins, life, status, level_completed, world, stage
+             ) VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
 
         cursor.execute(
@@ -172,6 +177,8 @@ def log_episode(experiment_id: int, episode_data: dict[str, Any]):
                 reward,
                 episode_length,
                 distance_traveled,
+                max_x_pos,
+                final_x_pos,
                 y_pos,
                 score,
                 time,
