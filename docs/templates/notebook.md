@@ -1,8 +1,9 @@
 ---
 created: {{date}}
 tags:
-  - analysis
-  - notebook
+  - project/mlp
+  - type/log
+  - tool/jupyter
 ---
 
 # {{title}}

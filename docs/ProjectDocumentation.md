@@ -1,13 +1,10 @@
 ---
 id: ProjectDocumentation
 aliases: []
-tags: []
----
-
-id: ProjectDocumentation
-aliases: []
-tags: []
-
+tags:
+  - project/mlp
+  - type/reference
+  - status/active
 ---
 
 # Mario RL Agent - Project Documentation
@@ -509,7 +506,27 @@ Complete paradigm shift: Instead of pixel observations with CnnPolicy, use RAM-b
 - `RAMObservationWrapper`: Frame stacking for temporal info, flattened for MLP
 - Training completed 10M steps (Jan 26, 2026)
 
-**v7 Results:** Evaluation pending
+**v7 Results - SUCCESS!**
+
+| Metric | v4 (CNN) | v7 (RAM) |
+|--------|----------|----------|
+| Avg Distance | 1,948 px | **2,321 px** (+19%) |
+| Avg Reward | 4,447 | **6,150** (+38%) |
+| Max Distance | **3,154 px** | 2,776 px |
+| Consistency (stddev) | 893 | **762** |
+| Episodes Reaching 2700+ | 42% | **72%** |
+| Reward-Distance Correlation | **0.826** | 0.230 |
+
+**Key Findings:**
+- v7 is more consistent, v4 has higher variance but occasionally breaks through to 3000+
+- The apparent 2760px "ceiling" was later revealed to be a **metrics/callback bug** (see Phase 6)
+- v7 completed levels during evaluation but not during training (final weights + luck)
+- v7's learning curve was stable from the start (no collapse/recovery like v4)
+
+**Both approaches are valid for Phase 6:**
+- v4's strong reward correlation (0.826) provides clearer learning signal
+- v7's RAM observations are more interpretable for imitation learning
+- Combining both: RAM obs + RewardShapingWrapper + BC pre-training
 
 **Phase 5 Artifacts:**
 - `configs/ppo_v2.yaml` through `configs/ppo_v7.yaml`
@@ -520,70 +537,62 @@ Complete paradigm shift: Instead of pixel observations with CnnPolicy, use RAM-b
 - `src/training/callbacks.py` - Added multi-stage distance tracking
 - `database/schema_migration_02.sql` - Added `max_x_pos`, `final_x_pos` columns
 
-### Phase 6: Imitation Learning ⏳ NEXT (Feb 2026)
+### Phase 6: Evaluation & Fine-tuning ✅ Complete (Feb 2026)
 
-**Goal:** Teach the agent speedrunning techniques it can't discover through random exploration.
+**Original Goal:** Teach the agent speedrunning techniques via imitation learning to break through the 2760px ceiling.
 
-**Planned Approach: BC Pre-training → PPO Fine-tuning**
+**Actual Outcome:** The "ceiling" was a metrics bug. v7 was already beating 1-1.
 
-This hybrid approach leverages both demonstration data and reinforcement learning:
+#### Part A: Imitation Learning POC — Abandoned
 
-1. **Behavioral Cloning (BC)**: Supervised learning on expert (state, action) pairs to initialize policy
-2. **PPO Fine-tuning**: Continue training with RL to optimize beyond demonstrations
-3. **Optional reward shaping**: Bonus reward when agent's action matches expert
+Built `scripts/poc_frame_skip_replay.py` to test whether smbdataset demonstration data could be replayed through the gym environment:
 
-**Data Sources (Two-Stage Plan):**
+- Downloaded smbdataset (933MB, 280 episodes, 32 levels)
+- Identified 5 winning 1-1 episodes with ~2200 frames each
+- Implemented action parsing, NES→SIMPLE_MOVEMENT mapping, and replay loop
 
-| Stage   | Source                                                        | Purpose                                    | Format Conversion                            |
-| ------- | ------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------- |
-| Stage 1 | [rafaelcp/smbdataset](https://github.com/rafaelcp/smbdataset) | Competent play (737k frames, 280 episodes) | 256x240 → 84x84, 256 actions → 7 actions     |
-| Stage 2 | TAS input files from [TASVideos.org](https://tasvideos.org)   | Speedrun tricks & glitches                 | Parse .fm2 files, replay through environment |
+**POC Results:**
+- Full-speed replay (v3 env, frameskip=1): Only reached x=839-899 (25% of level)
+- Subsampled (every 4th frame): Dropped to ~35% of full-speed distance
+- Root causes: Action timing mismatch between 60fps recordings and env physics, lossy action mapping (NES 256→SIMPLE_MOVEMENT 7)
 
-**Why Two Stages:**
+**Decision:** Imitation learning **not worth the investment**. Raw action sequences are too brittle; a model trained on noisy trajectories would inherit those problems plus add learning noise.
 
-- **Stage 1 (smbdataset)**: General competent play - clearing obstacles, basic strategies
-- **Stage 2 (TAS)**: Specific speedrun tricks that require precise inputs (wall clips, momentum glitches)
+#### Part B: v8 Fine-tuning — The Real Discovery
 
-**Action Space Considerations:**
+Pivoted to fine-tuning v7 weights with fixed callbacks:
 
-- Current: `SIMPLE_MOVEMENT` (7 actions) - no left+jump combinations
-- Speedrun tricks may require `COMPLEX_MOVEMENT` (12 actions) or custom action space
-- More actions = longer training (exploration scales combinatorially, not linearly)
-- Custom action space option: Add only `left+A` for specific tricks without full complexity
+**v8 Config (`ppo_v8.yaml`):**
+- Loads v7 final weights (`pretrained_model` support added to `train.py`)
+- Learning rate: 0.0001 (reduced from v7's 0.0003 for fine-tuning)
+- 5M additional timesteps
+- Same RAM/MlpPolicy/RewardShapingWrapper setup as v7
 
-**Reward Shaping Adjustments:**
+**Critical Discovery — The 2760px "Ceiling" Was a Metrics Bug:**
 
-- Current backward penalty (-0.1/pixel left) discourages learning tricks requiring leftward movement
-- For speedrun training: reduce penalty to -0.05 or make context-dependent
-- Let imitation learning handle the 5% exception cases where left movement is optimal
+With fixed callbacks, v8 training immediately revealed:
+- **43% win rate (78/179 episodes)** from the very first rollouts — before any new training
+- v7 was already completing World 1-1 consistently
+- Episodes with ~904 distance and high rewards (7200-7500) = completed 1-1, died in 1-2
+- Episodes with ~2753 distance and lower rewards (6440-6450) = died before finishing 1-1
+- The "ceiling" was the callback bug misreporting multi-stage progress, not a training limitation
 
-**Technical Approach:**
+**Phase 6 Artifacts:**
+- `scripts/poc_frame_skip_replay.py` — Frame skip replay POC (complete)
+- `smbdataset/` — Downloaded demonstration data (3.4GB extracted)
+- `configs/ppo_v8.yaml` — Fine-tuning config with pretrained model loading
+- `src/training/train.py` — Added `pretrained_model` support via `PPO.load()`
 
-- **Frame skip (skip=4)** included in environment pipeline (validated in Phase 5 Part E)
-- Transfer CNN feature layers from trained PPO model (visual understanding transfers)
-- Retrain output layers for new action space if switching to COMPLEX_MOVEMENT
-- Use demonstrations to guide exploration past obstacles agent is stuck on
+**Infrastructure Changes:**
+- Training moved to `mlp-dev` distrobox (Fedora 43) — resolves nes_py/pyglet X11 issues on ZenaOS/Nix
+- PostgreSQL 16 running as podman container (`mario-postgres`) with `mario_pgdata` volume
 
-**Tasks:**
+**Key Lessons:**
+1. Always validate metrics before concluding there's a performance plateau
+2. Imitation learning from recorded demos has fundamental timing/mapping challenges
+3. Fine-tuning existing weights is far more efficient than building new pipelines when the model already works
 
-- [ ] Download and preprocess smbdataset (format conversion)
-- [ ] Implement BC training pipeline (supervised learning on demos)
-- [ ] Test BC pre-training → PPO fine-tuning workflow
-- [ ] Research TAS file format (.fm2) and conversion to action indices
-- [ ] Create demo replay script to capture (observation, action) pairs from TAS
-- [ ] Evaluate custom action space (SIMPLE + left+A) vs full COMPLEX_MOVEMENT
-- [ ] Adjust reward shaping for speedrun-friendly training
-- [ ] Train and evaluate imitation-augmented agent
-- [ ] Compare: Pure RL vs BC-initialized vs Full imitation pipeline
-
-**Key Concepts to Learn:**
-
-- Behavioral Cloning: Supervised learning on expert demonstrations
-- Credit assignment problem: Connecting immediate actions to delayed rewards
-- Policy distillation: Using one trained agent's outputs to teach another
-- On-policy vs off-policy implications for demonstration data
-
-### Phase 7: Production & Analysis (Mar-Apr 2026)
+### Phase 7: Production & Analysis ⏳ NEXT (Mar 2026)
 
 - [ ] Containerize training environment with Docker:
   - [ ] Multi-stage build (training vs. inference)

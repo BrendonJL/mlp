@@ -1,0 +1,47 @@
+experiment:
+  name: "ppo_v8_world1-1"
+  description: "PPO v8: Continue training v7 RAM model with fixed callbacks. 5M additional steps, reduced LR for fine-tuning."
+  algorithm: "PPO"
+
+environment:
+  game: "SuperMarioBros-v3"
+  action_space: "SIMPLE_MOVEMENT"
+  render_mode: "rgb_array"
+  frame_skip: 4
+  reward_wrapper: "standard"
+  observation_mode: "ram"
+
+ppo_hyperparameters:
+  policy: MlpPolicy
+  learning_rate: 0.0001
+  use_lr_scheduler: true
+  gamma: 0.99
+  n_steps: 2048
+  n_epochs: 10
+  batch_size: 64
+  clip_range: 0.2
+  use_clip_scheduler: false
+  ent_coef: 0.01
+  gae_lambda: 0.95
+  n_envs: 4
+
+training:
+  total_timesteps: 5000000
+  save_freq: 500000
+  eval_freq: 10000
+  pretrained_model: "models/ppo_v7_world1-1_final.zip"
+
+paths:
+  model_dir: "models/"
+  log_dir: "data/logs/"
+  checkpoint_dir: "models/checkpoints/"
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "mario_rl_db"
+  user: "mario_rl_user"
+
+wandb:
+  project: "mario-rl-agent"
+  tags: ["ppo", "phase-6", "v8", "ram-observations", "mlp-policy", "fine-tune", "5M-steps"]

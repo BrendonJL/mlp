@@ -2,9 +2,9 @@
 created:
   "{ date }":
 tags:
-  - mario-rl-project
-  - learning
-  - generalnote
+  - project/mlp
+  - area/learning
+  - type/reference
 ---
 
 # {{title}}

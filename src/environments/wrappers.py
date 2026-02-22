@@ -143,6 +143,7 @@ class RewardShapingWrapper(gym.Wrapper):
         backward_penalty=0.1,
         idle_penalty=0.2,
         death_penalty=50.0,
+        completion_bonus=500.0,
         max_stuck_steps=300,  # End episode if stuck for this many steps (increased for v3)
     ):
         super().__init__(env)
@@ -150,19 +151,39 @@ class RewardShapingWrapper(gym.Wrapper):
         self.backward_penalty = backward_penalty  # Penalty per pixel moved left
         self.idle_penalty = idle_penalty  # Penalty for not moving
         self.death_penalty = death_penalty  # Penalty for losing a life
+        self.completion_bonus = completion_bonus  # Bonus for reaching the flag
         self.max_stuck_steps = max_stuck_steps  # Early termination threshold
         self.prev_x_pos = 0
         self.prev_life = 2
+        self.prev_stage = 1
+        self.accumulated_distance = 0  # Tracks total distance across stage transitions
         self.stuck_count = 0  # Track consecutive steps without movement
+        self.level_completed = False  # Stage transition = level cleared
         # Milestone bonuses for reaching certain x positions
-        self.milestones = {650: 150, 900: 100, 1200: 150, 1600: 200, 2000: 250}
+        self.milestones = {
+            650: 150,
+            900: 100,
+            1200: 150,
+            1600: 200,
+            2000: 250,
+            2500: 200,
+            3000: 300,
+            # Level 1-2 milestones (accumulated distance beyond 1-1's ~3154px)
+            3500: 300,
+            4000: 400,
+            4500: 500,
+            5000: 600,
+        }
         self.reached_milestones = set()
 
     def reset(self, **kwargs):
         obs, info = self.env.reset(**kwargs)
         self.prev_x_pos = info.get("x_pos", 0)
         self.prev_life = info.get("life", 2)
+        self.prev_stage = info.get("stage", 1)
+        self.accumulated_distance = 0
         self.stuck_count = 0
+        self.level_completed = False
         self.reached_milestones = set()  # Reset milestones each episode
         return obs, info
 
@@ -170,7 +191,21 @@ class RewardShapingWrapper(gym.Wrapper):
         obs, reward, terminated, truncated, info = self.env.step(action)
         current_x_pos = info["x_pos"]
         current_life = info["life"]
+        current_stage = info["stage"]
+
+        # Detect stage transition (level completion) — accumulate distance
+        if current_stage > self.prev_stage:
+            self.accumulated_distance += self.prev_x_pos
+            if not self.level_completed:
+                reward += self.completion_bonus
+                self.level_completed = True
+
         x_delta = current_x_pos - self.prev_x_pos
+
+        # Guard: clamp x_delta at level transitions (x_pos resets to ~0 in 1-2)
+        # No single frame should produce >50px movement; large deltas are transitions
+        if abs(x_delta) > 50:
+            x_delta = 0
 
         # Apply reward shaping
         if x_delta > 0:
@@ -186,9 +221,10 @@ class RewardShapingWrapper(gym.Wrapper):
         if current_life < self.prev_life:
             reward = reward - self.death_penalty
 
-        # Milestone bonuses for reaching new x positions
+        # Milestone bonuses using accumulated distance (survives stage transitions)
+        total_distance = self.accumulated_distance + current_x_pos
         for threshold, bonus in self.milestones.items():
-            if current_x_pos >= threshold and threshold not in self.reached_milestones:
+            if total_distance >= threshold and threshold not in self.reached_milestones:
                 reward += bonus
                 self.reached_milestones.add(threshold)
 
@@ -198,6 +234,7 @@ class RewardShapingWrapper(gym.Wrapper):
 
         self.prev_x_pos = current_x_pos
         self.prev_life = current_life
+        self.prev_stage = current_stage
 
         return obs, reward, terminated, truncated, info
 
@@ -450,7 +487,7 @@ class RAMObservationWrapper(gym.ObservationWrapper):  # type: ignore[misc]
         stacked = self.frame_stack[:, :, :: self.n_skip]
         return stacked.flatten().astype(np.float32), info
 
-    def observation(self, _obs):  # _obs unused - we read directly from RAM
+    def observation(self, _):  # unused - we read directly from RAM
         # Shift frames
         self.frame_stack[:, :, 1:] = self.frame_stack[:, :, :-1]
 

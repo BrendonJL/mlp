@@ -3,7 +3,9 @@
 id: "<% tp.date.now("YYYY-MM-DD") %>"
 aliases: []
 tags:
-  - daily-notes
+  - project/mlp
+  - type/daily
+  - area/learning
 created: <% tp.file.creation_date() %>
 ---
 # 📅 <% tp.date.now("dddd, MMMM DD, YYYY") %>

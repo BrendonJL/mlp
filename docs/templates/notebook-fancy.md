@@ -1,47 +1,9 @@
-
----
-created: 2025-12-26
-modified: 2025-12-26 13:13
-tags:
-  - null
-status: draft
----
-
-# notebook-fancy
-
-> **Created:** December 26, 2025
-
-## 📋 Overview
-
-<% tp.file.cursor(1) %>
-
-## 🔑 Key Points
-
--
--
--
-
-## 🔗 Related Concepts
-
-- [[ProjectDocumentation]]
--
-
-## 📚 References
-
--
-
-## 📝 Notes
-
----
-
-_Last updated: 2025-12-26 13:13_
 ---
 created: <% tp.file.creation_date("YYYY-MM-DD") %>
 tags:
-  - analysis
-  - notebook
-  - experiment
-type: analysis
+  - project/mlp
+  - type/log
+  - tool/jupyter
 status: in-progress
 ---
 

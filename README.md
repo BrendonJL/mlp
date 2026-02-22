@@ -19,17 +19,22 @@ A hands-on journey into deep reinforcement learning - training agents from scrat
 | **PPO v4 (10M + skip)** | 18,958 | 4,448 | 1,949 px | 3,154 px | **60%** |
 | PPO v5 (5M) | 7,430 | 1,123 | 1,399 px | 3,157 px | Failed* |
 | PPO v6 | - | - | - | - | Failed* |
-| PPO v7 (10M + RAM) | TBD | TBD | TBD | TBD | Pending |
+| **PPO v7 (10M + RAM)** | 16,571 | **6,151** | **2,321 px** | 2,776 px | **71%** |
 
 *v5 failed due to reward engineering issues (negative reward/distance correlation). v6 failed due to entropy collapse.
 
-**Key Insight:** Frame skip (4 frames/action) was the breakthrough - it reduced jump chaining difficulty by 4x.
+**Key Insights:**
+- **Frame skip (4 frames/action)** was the v4 breakthrough - reduced jump chaining difficulty by 4x
+- **RAM observations** (v7) provide more consistent performance - 72% of episodes reach 2700+ vs 42% for v4
+- **v7 completed level 1** during evaluation (died on level 2) - the final trained model can win!
 
-## Coming Soon
+## Phase 5 Complete!
 
-- Data visualizations (learning curves, distance distributions)
-- Gameplay demonstration videos
-- Final comparison analysis with v7 results
+Two successful approaches discovered:
+- **v4 (CNN + Frame Skip):** Higher variance, occasionally reaches 3154px (near flagpole)
+- **v7 (RAM + MLP):** More consistent, 72% of episodes reach 2700+, completed level in evaluation
+
+**Next:** Phase 6 - Imitation Learning (BC pre-training on speedrun data)
 
 ## Project Structure
 
@@ -63,8 +68,8 @@ mlp/
 | 2. Baseline Agent | Complete | Random baseline with 13 metrics |
 | 3. DQN Training | Complete | 5.3x improvement over random |
 | 4. PPO Implementation | Complete | Learned from policy collapse |
-| 5. Tuning & Optimization | Complete | Frame skip, reward shaping, RAM obs |
-| 6. Imitation Learning | Next | Learn from expert demonstrations |
+| 5. Tuning & Optimization | **Complete** | v4 (60% progress) + v7 (71% progress, level complete!) |
+| 6. Imitation Learning | **Next** | Combine v4+v7 strengths + speedrun pre-training |
 
 ## Documentation
 

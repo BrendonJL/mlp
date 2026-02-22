@@ -1,9 +1,10 @@
 ---
 id: Tasks Dashboard
 aliases: []
-tags: []
+tags:
+  - project/mlp
+  - type/moc
 ---
-**s**
 # Tasks Dashboard
 
 ## Today's Tasks

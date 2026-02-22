@@ -135,6 +135,8 @@ def main():
     else:
         raise ValueError("The only supported algs are DQN or PPO")
 
+    pretrained_path = config["training"].get("pretrained_model")
+
     print(f"🤖 Creating {algorithm} Agent")
     if algorithm == "PPO":
         # Check if LR scheduler is enabled
@@ -152,19 +154,29 @@ def main():
         else:
             clip_range = hyperparams["clip_range"]
 
-        model = PPO(
-            policy=hyperparams["policy"],
-            env=env,  # type: ignore[arg-type]
-            learning_rate=lr,
-            batch_size=hyperparams["batch_size"],
-            gamma=hyperparams["gamma"],
-            n_steps=hyperparams["n_steps"],
-            n_epochs=hyperparams["n_epochs"],
-            clip_range=clip_range,
-            ent_coef=hyperparams["ent_coef"],
-            gae_lambda=hyperparams["gae_lambda"],
-            verbose=1,
-        )
+        if pretrained_path:
+            print(f"📦 Loading pretrained model: {pretrained_path}")
+            model = PPO.load(
+                pretrained_path,
+                env=env,  # type: ignore[arg-type]
+                learning_rate=lr,
+                clip_range=clip_range,
+                ent_coef=hyperparams["ent_coef"],
+            )
+        else:
+            model = PPO(
+                policy=hyperparams["policy"],
+                env=env,  # type: ignore[arg-type]
+                learning_rate=lr,
+                batch_size=hyperparams["batch_size"],
+                gamma=hyperparams["gamma"],
+                n_steps=hyperparams["n_steps"],
+                n_epochs=hyperparams["n_epochs"],
+                clip_range=clip_range,
+                ent_coef=hyperparams["ent_coef"],
+                gae_lambda=hyperparams["gae_lambda"],
+                verbose=1,
+            )
     elif algorithm == "DQN":
         model = DQN(
             policy=hyperparams["policy"],

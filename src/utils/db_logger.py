@@ -24,7 +24,7 @@ def get_connection_pool():
             host="localhost",
             database="mario_rl_db",
             user="mario_rl_user",
-            password="Bingbongbing123!",
+            password="Bingbongbing123",
         )
         print("✅ Database connection pool created")
 

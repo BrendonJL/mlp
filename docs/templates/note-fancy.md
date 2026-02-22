@@ -3,7 +3,8 @@
 created: <% tp.file.creation_date("YYYY-MM-DD") %>
 modified: <% tp.file.last_modified_date("YYYY-MM-DD HH:mm") %>
 tags:
-  - <%* tR += await tp.system.suggester(["concept", "reference", "idea", "research"], ["concept", "reference", "idea", "research"]) %>
+  - project/mlp
+  - <%* tR += await tp.system.suggester(["type/reference", "type/insight", "type/decision", "type/log", "area/learning"], ["type/reference", "type/insight", "type/decision", "type/log", "area/learning"]) %>
 status: draft
 ---
 

@@ -6,7 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a reinforcement learning project that trains an AI agent to play Super Mario Bros. It's a learning-focused ML project with the ultimate goal of applying these skills to cybersecurity applications (Suricata rule generation, intelligent incident reporting).
 
-**Current Status**: Phase 1 Complete (Dec 26-29, 2025). Moving to Phase 2: Baseline Agent.
+**Current Status**: Phase 6 Complete (Feb 2026). v8 fine-tuning v7 weights. Entering Phase 7: Final Packaging.
+
+## Infrastructure (ZenaOS)
+- Training runs inside `mlp-dev` distrobox (Fedora 43) — nes_py/pyglet need X11 libs unavailable on Nix
+- PostgreSQL 16: podman container `mario-postgres`, volume `mario_pgdata`. Start with `podman start mario-postgres` after reboot.
+- Password: `Bingbongbing123` (no special chars — `!` causes shell escaping in podman env vars)
+
+## Training Status
+- v7 model beats World 1-1 (43%+ win rate). The "2700px ceiling" was a callback metrics bug, not a real plateau.
+- v8 = fine-tuning v7 weights (5M steps, LR 0.0001). Config supports `pretrained_model` in training section.
+- Project entering final packaging phase (Phase 7). Next: capture videos, final write-up.
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-tags: [daily, mario-rl-project, learning]
+tags: [project/mlp, type/daily, area/learning]
 ---
 # {{date}}
 
