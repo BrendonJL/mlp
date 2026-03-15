@@ -251,19 +251,21 @@ mlp/
 ├── src/
 │   ├── environments/     # Game wrappers (SkipFrame, RewardShaping, RAM obs)
 │   ├── training/         # Training loops, callbacks, checkpointing
-│   ├── models/           # Neural network architectures
-│   ├── preprocessing/    # Frame processing pipeline
 │   └── utils/            # Config loading, database logging
 ├── configs/              # YAML hyperparameter configs (v2–v9)
 ├── models/               # Saved model checkpoints (.zip)
 ├── notebooks/            # Jupyter training analysis
 ├── scripts/              # Evaluation, visualization, model recovery
 ├── database/             # SQL schemas and migrations
+├── docker/               # Docker build context
 ├── docs/
 │   ├── daily/            # Day-by-day learning logs
 │   ├── images/           # Plots, videos, timeline
+│   │   └── eval/         # Final evaluation charts
+│   ├── notebook/         # Exported notebook visualizations
 │   └── tables/           # Exported evaluation tables
-└── data/                 # Training logs and video recordings
+├── Dockerfile            # Reproducible training environment
+└── README.md
 ```
 
 ## Technology Stack

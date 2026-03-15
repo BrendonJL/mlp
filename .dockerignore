@@ -1,0 +1,12 @@
+.venv
+.git
+.github
+__pycache__
+*.pyc
+wandb
+data
+docs
+notebooks
+*.egg-info
+.ruff_cache
+.pytest_cache
