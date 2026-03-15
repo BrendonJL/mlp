@@ -1,16 +1,18 @@
+from typing import Any
+
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
 
 from src.environments.mario_env import make_mario_env
 
 
 def make_vec_mario_env(
-    n_envs,
-    game_version,
-    action_space,
-    skip=4,
-    reward_wrapper="standard",
-    observation_mode="pixel",
-):
+    n_envs: int,
+    game_version: str,
+    action_space: list,
+    skip: int = 4,
+    reward_wrapper: str = "standard",
+    observation_mode: str = "pixel",
+) -> Any:
     def make_env(_):
         def _init():
             env = make_mario_env(

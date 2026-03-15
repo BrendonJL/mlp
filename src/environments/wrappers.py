@@ -43,7 +43,7 @@ class SkipFrameWrapper(gym.Wrapper):
         super().__init__(env)
         self.skip = max(skip, 1)
 
-    def step(self, action):
+    def step(self, action: int) -> tuple[Any, float, bool, bool, dict[str, Any]]:
         total_reward = 0.0
         obs = None
         terminated = False
@@ -64,7 +64,7 @@ class GrayscaleWrapper(gym.ObservationWrapper):  # type: ignore[misc]
             low=0, high=255, shape=(240, 256, 1), dtype=np.uint8
         )
 
-    def observation(self, obs):
+    def observation(self, obs: np.ndarray) -> np.ndarray:
         greyscale = np.dot(obs, [0.299, 0.587, 0.114])
         greyscale = np.expand_dims(greyscale, axis=-1)
 
@@ -79,7 +79,7 @@ class ResizeWrapper(gym.ObservationWrapper):  # type: ignore[misc]
             low=0, high=255, shape=(84, 84, 1), dtype=np.uint8
         )
 
-    def observation(self, obs):
+    def observation(self, obs: np.ndarray) -> np.ndarray:
         # Resize (might lose channel dimension)
         resized = cv2.resize(obs, (self.size, self.size))
 
@@ -97,7 +97,7 @@ class NormalizeWrapper(gym.ObservationWrapper):  # type: ignore[misc]
             low=0, high=1, shape=(84, 84, 1), dtype=np.float32
         )
 
-    def observation(self, obs):
+    def observation(self, obs: np.ndarray) -> np.ndarray:
         normalized = obs / 255.0
         return normalized.astype(np.float32)
 
@@ -124,7 +124,7 @@ class FrameStackWrapper(gym.ObservationWrapper):  # type: ignore[misc]
         # Return (obs, info) tuple for new API
         return self._get_stacked_frames(), info
 
-    def observation(self, obs):
+    def observation(self, obs: np.ndarray) -> np.ndarray:
         self.frames.append(obs)
 
         return self._get_stacked_frames()
@@ -187,7 +187,7 @@ class RewardShapingWrapper(gym.Wrapper):
         self.reached_milestones = set()  # Reset milestones each episode
         return obs, info
 
-    def step(self, action):
+    def step(self, action: int) -> tuple[Any, float, bool, bool, dict[str, Any]]:
         obs, reward, terminated, truncated, info = self.env.step(action)
         current_x_pos = info["x_pos"]
         current_life = info["life"]
@@ -291,7 +291,7 @@ class SpeedrunRewardWrapper(gym.Wrapper):
         self.cumulative_milestone = 0.0
         return obs, info
 
-    def step(self, action):
+    def step(self, action: int) -> tuple[Any, float, bool, bool, dict[str, Any]]:
         obs, raw_base_reward, terminated, truncated, info = self.env.step(action)
         base_reward = (
             raw_base_reward * self.base_reward_scale
@@ -487,7 +487,7 @@ class RAMObservationWrapper(gym.ObservationWrapper):  # type: ignore[misc]
         stacked = self.frame_stack[:, :, :: self.n_skip]
         return stacked.flatten().astype(np.float32), info
 
-    def observation(self, _):  # unused - we read directly from RAM
+    def observation(self, _: Any) -> np.ndarray:  # unused - we read directly from RAM
         # Shift frames
         self.frame_stack[:, :, 1:] = self.frame_stack[:, :, :-1]
 
@@ -519,7 +519,7 @@ class TransposeWrapper(gym.ObservationWrapper):  # type: ignore[misc]
             dtype=np.uint8,
         )
 
-    def observation(self, obs):
+    def observation(self, obs: np.ndarray) -> np.ndarray:
         # Transpose from (H, W, C) to (C, H, W)
         return np.transpose(obs, (2, 0, 1))
 

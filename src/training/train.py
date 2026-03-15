@@ -1,6 +1,7 @@
 import argparse
 import subprocess
 import sys
+from collections.abc import Callable
 
 import torch
 from stable_baselines3 import DQN, PPO
@@ -14,7 +15,7 @@ from src.utils import db_logger
 from src.utils.config_loader import load_config
 
 
-def linear_schedule(initial_value: float):
+def linear_schedule(initial_value: float) -> Callable[[float], float]:
     """
     Linear learning rate schedule that anneals from initial_value to 0.
 
@@ -31,7 +32,9 @@ def linear_schedule(initial_value: float):
     return func
 
 
-def linear_schedule_with_floor(initial_value: float, final_value: float):
+def linear_schedule_with_floor(
+    initial_value: float, final_value: float
+) -> Callable[[float], float]:
     def func(progress_remaining: float) -> float:
         return final_value + progress_remaining * (initial_value - final_value)
 

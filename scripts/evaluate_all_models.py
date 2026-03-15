@@ -13,6 +13,7 @@ Usage:
 
 import argparse
 import sys
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -79,7 +80,7 @@ MODEL_REGISTRY: list[ModelSpec] = [
     ),
     ModelSpec(
         key="ppo_v3",
-        path="models/ppo_v3_world1-1_final.zip",
+        path="models/ppo_v3_world1-1_recovered.zip",
         algorithm="PPO",
         action_space=SIMPLE_MOVEMENT,
         obs_mode="pixel",
@@ -87,7 +88,7 @@ MODEL_REGISTRY: list[ModelSpec] = [
     ),
     ModelSpec(
         key="ppo_v4",
-        path="models/ppo_v4_world1-1_final.zip",
+        path="models/ppo_v4_world1-1_recovered.zip",
         algorithm="PPO",
         action_space=SIMPLE_MOVEMENT,
         obs_mode="pixel",
@@ -95,7 +96,7 @@ MODEL_REGISTRY: list[ModelSpec] = [
     ),
     ModelSpec(
         key="ppo_v5",
-        path="models/ppo_v5_world1-1_final.zip",
+        path="models/ppo_v5_world1-1_recovered.zip",
         algorithm="PPO",
         action_space=RIGHT_ONLY,
         obs_mode="pixel",
@@ -103,7 +104,7 @@ MODEL_REGISTRY: list[ModelSpec] = [
     ),
     ModelSpec(
         key="ppo_v7",
-        path="models/ppo_v7_world1-1_final.zip",
+        path="models/ppo_v7_world1-1_recovered.zip",
         algorithm="PPO",
         action_space=SIMPLE_MOVEMENT,
         obs_mode="ram",
@@ -142,6 +143,8 @@ class EpisodeResult:
     coins: int
     steps: int
     flag_get: bool
+    wall_start: float = 0.0  # time.time() when episode started
+    wall_end: float = 0.0  # time.time() when episode ended
 
 
 @dataclass
@@ -197,12 +200,15 @@ def load_model(spec: ModelSpec, env: Any) -> Any:
         raise ValueError(f"Unknown algorithm: {spec.algorithm}")
 
 
-def run_episode(env: Any, model: Any, max_steps: int = 5000) -> EpisodeResult:
+def run_episode(
+    env: Any, model: Any, max_steps: int = 5000, timeout: float | None = None
+) -> EpisodeResult:
     """
     Run a single episode. Returns metrics collected during the episode.
     Completion is determined by flag_get OR x_pos >= 3150 at any point.
     """
     obs, info = env.reset()
+    wall_start = time.time()
 
     total_reward = 0.0
     max_x_pos = info.get("x_pos", 0)
@@ -216,10 +222,13 @@ def run_episode(env: Any, model: Any, max_steps: int = 5000) -> EpisodeResult:
             action = env.action_space.sample()
         else:
             action, _ = model.predict(obs, deterministic=False)
-
+            action = int(action)
         obs, reward, terminated, truncated, info = env.step(action)
         total_reward += reward
         steps += 1
+
+        if timeout and (time.time() - wall_start) > timeout:
+            break
 
         current_x = info.get("x_pos", 0)
         if current_x > max_x_pos:
@@ -234,6 +243,8 @@ def run_episode(env: Any, model: Any, max_steps: int = 5000) -> EpisodeResult:
         if terminated or truncated:
             break
 
+    wall_end = time.time()
+
     return EpisodeResult(
         reward=total_reward,
         x_pos=max_x_pos,
@@ -241,6 +252,8 @@ def run_episode(env: Any, model: Any, max_steps: int = 5000) -> EpisodeResult:
         coins=last_coins,
         steps=steps,
         flag_get=flag_get,
+        wall_start=wall_start,
+        wall_end=wall_end,
     )
 
 
@@ -249,7 +262,9 @@ def run_episode(env: Any, model: Any, max_steps: int = 5000) -> EpisodeResult:
 # ---------------------------------------------------------------------------
 
 
-def evaluate_model(spec: ModelSpec, num_episodes: int) -> ModelResult:
+def evaluate_model(
+    spec: ModelSpec, num_episodes: int, render: bool = False
+) -> ModelResult:
     result = ModelResult(key=spec.key)
 
     # Check model file exists (skip missing zips)
@@ -261,20 +276,21 @@ def evaluate_model(spec: ModelSpec, num_episodes: int) -> ModelResult:
             print(f"  [SKIP] {spec.key}: {result.skip_reason}")
             return result
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  Evaluating: {spec.key}  ({spec.algorithm})")
     print(
         f"  Action space: {'RIGHT_ONLY' if spec.action_space is RIGHT_ONLY else 'SIMPLE_MOVEMENT'}"
     )
     print(f"  Obs mode:     {spec.obs_mode}")
     print(f"  Reward:       {spec.reward_wrapper}")
-    print(f"{'='*60}")
+    print(f"  Render:       {'human' if render else 'headless'}")
+    print(f"{'=' * 60}")
 
     # Build environment matching training config
     env = make_mario_env(
         game_version="SuperMarioBros-v3",
         action_space=spec.action_space,
-        render_mode=None,
+        render_mode="human" if render else None,
         skip=spec.frame_skip,
         reward_wrapper=spec.reward_wrapper,
         observation_mode=spec.obs_mode,
@@ -284,24 +300,41 @@ def evaluate_model(spec: ModelSpec, num_episodes: int) -> ModelResult:
         model = load_model(spec, env)
 
         for ep in range(1, num_episodes + 1):
-            ep_result = run_episode(env, model, max_steps=5000)
+            ep_result = run_episode(
+                env, model, max_steps=5000, timeout=30 if render else None
+            )
             result.episodes.append(ep_result)
 
             completed_marker = (
                 " [FLAG]" if ep_result.flag_get or ep_result.x_pos >= 3150 else ""
             )
+            ts = datetime.fromtimestamp(ep_result.wall_start).strftime("%H:%M:%S")
             print(
                 f"  ep {ep:3d}/{num_episodes}  "
                 f"reward={ep_result.reward:8.1f}  "
                 f"x_pos={ep_result.x_pos:4d}  "
                 f"score={ep_result.score:5d}  "
-                f"steps={ep_result.steps:4d}"
+                f"steps={ep_result.steps:4d}  "
+                f"@{ts}"
                 f"{completed_marker}"
             )
     finally:
         env.close()
 
     result.compute_stats()
+
+    # Log best episode timestamp for video trimming
+    if result.episodes:
+        best_ep = max(result.episodes, key=lambda e: e.x_pos)
+        best_idx = result.episodes.index(best_ep) + 1
+        best_start = datetime.fromtimestamp(best_ep.wall_start).strftime("%H:%M:%S")
+        best_end = datetime.fromtimestamp(best_ep.wall_end).strftime("%H:%M:%S")
+        duration = best_ep.wall_end - best_ep.wall_start
+        print(
+            f"\n  >> BEST EPISODE: #{best_idx}  "
+            f"x_pos={best_ep.x_pos}  reward={best_ep.reward:.1f}  "
+            f"time={best_start}-{best_end} ({duration:.1f}s)"
+        )
     return result
 
 
@@ -326,8 +359,7 @@ def format_summary_table(
         if r.skipped:
             if include_skipped:
                 rows.append(
-                    f"{r.key:<14} | {'SKIPPED':>11} | {'':>9} | "
-                    f"{'':>9} | {'':>10} | {'':>10}"
+                    f"{r.key:<14} | {'SKIPPED':>11} | {'':>9} | {'':>9} | {'':>10} | {'':>10}"
                 )
             continue
         rows.append(
@@ -466,6 +498,11 @@ def parse_args() -> argparse.Namespace:
         metavar="PATH",
         help="Path to write the markdown report (default: docs/evaluation_results.md)",
     )
+    parser.add_argument(
+        "--render",
+        action="store_true",
+        help="Render in human mode (opens game window for screen recording)",
+    )
     return parser.parse_args()
 
 
@@ -490,22 +527,49 @@ def main() -> None:
     output_path = PROJECT_ROOT / args.output
 
     print("\nMLP Model Evaluation")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Models to evaluate: {[s.key for s in specs]}")
     print(f"Episodes per model: {args.num_episodes}")
+    print(f"Render mode:        {'human' if args.render else 'headless'}")
     print(f"Output: {output_path}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
+
+    eval_start = time.time()
+    print(f"Evaluation started at: {datetime.now().strftime('%H:%M:%S')}\n")
 
     results: list[ModelResult] = []
     for spec in specs:
-        result = evaluate_model(spec, args.num_episodes)
+        result = evaluate_model(spec, args.num_episodes, render=args.render)
         results.append(result)
 
     # Print summary table to stdout
-    print(f"\n\n{'='*60}")
+    print(f"\n\n{'=' * 60}")
     print("  EVALUATION COMPLETE — COMPARISON TABLE")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
     print(format_summary_table(results))
+
+    # Print best episode timestamps for video trimming
+    print(f"\n{'=' * 60}")
+    print("  BEST EPISODES — TIMESTAMPS FOR VIDEO TRIMMING")
+    print(f"{'=' * 60}")
+    eval_start_dt = datetime.fromtimestamp(eval_start)
+    print(f"  Recording started: {eval_start_dt.strftime('%H:%M:%S')}\n")
+    for r in results:
+        if r.skipped or not r.episodes:
+            continue
+        best = max(r.episodes, key=lambda e: e.x_pos)
+        best_idx = r.episodes.index(best) + 1
+        offset_s = best.wall_start - eval_start
+        offset_end = best.wall_end - eval_start
+        mm_s, ss_s = divmod(int(offset_s), 60)
+        hh_s, mm_s = divmod(mm_s, 60)
+        mm_e, ss_e = divmod(int(offset_end), 60)
+        hh_e, mm_e = divmod(mm_e, 60)
+        print(
+            f"  {r.key:<14}  ep#{best_idx:<3}  "
+            f"x={best.x_pos:<5}  reward={best.reward:>8.1f}  "
+            f"offset {hh_s:02d}:{mm_s:02d}:{ss_s:02d}-{hh_e:02d}:{mm_e:02d}:{ss_e:02d}"
+        )
     print()
 
     # Write markdown report

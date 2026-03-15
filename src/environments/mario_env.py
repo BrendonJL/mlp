@@ -1,3 +1,5 @@
+from typing import Any
+
 import gym_super_mario_bros
 from gym_super_mario_bros.actions import RIGHT_ONLY, SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
@@ -22,13 +24,13 @@ ACTION_SPACES = {
 
 
 def make_mario_env(
-    game_version="SuperMarioBros-v3",
-    action_space=SIMPLE_MOVEMENT,
-    render_mode=None,
-    skip=4,
-    reward_wrapper="standard",
-    observation_mode="pixel",
-):
+    game_version: str = "SuperMarioBros-v3",
+    action_space: list = SIMPLE_MOVEMENT,
+    render_mode: str | None = None,
+    skip: int = 4,
+    reward_wrapper: str = "standard",
+    observation_mode: str = "pixel",
+) -> Any:
     env = gym_super_mario_bros.make(
         game_version, apply_api_compatibility=True, render_mode=render_mode
     )

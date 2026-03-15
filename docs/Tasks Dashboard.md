@@ -2,6 +2,7 @@
 id: Tasks Dashboard
 aliases: []
 tags:
+  - area/projects
   - project/mlp
   - type/moc
 ---
@@ -35,3 +36,8 @@ done
 done after 2025-12-20
 limit 10
 ```
+
+## Related
+
+- [[ProjectDocumentation]]
+- [[Projects Index]]

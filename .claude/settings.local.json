@@ -4,7 +4,9 @@
       "WebSearch",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(poetry env info:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(distrobox enter:*)",
+      "Bash(find:*)"
     ]
   },
   "outputStyle": "Learning"

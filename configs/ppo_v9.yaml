@@ -2,7 +2,7 @@
 experiment:
   name: "ppo_v9_world1-1"
   description: >-
-    PPO v9: Fine-tune v7 with fixed reward shaping.
+    PPO v9: Fresh training with fixed reward shaping.
     x_delta clamp guards level transitions,
     stage-based completion bonus (+500),
     accumulated distance milestones.
@@ -18,7 +18,7 @@ environment:
 
 ppo_hyperparameters:
   policy: MlpPolicy
-  learning_rate: 0.0001
+  learning_rate: 0.0003
   use_lr_scheduler: true
   gamma: 0.99
   n_steps: 2048
@@ -31,10 +31,9 @@ ppo_hyperparameters:
   n_envs: 4
 
 training:
-  total_timesteps: 5000000
+  total_timesteps: 10000000
   save_freq: 500000
   eval_freq: 10000
-  pretrained_model: "models/ppo_v7_world1-1_final.zip"
 
 paths:
   model_dir: "models/"
@@ -55,6 +54,6 @@ wandb:
     - "v9"
     - "ram-observations"
     - "mlp-policy"
-    - "fine-tune"
+    - "fresh-train"
     - "reward-fix"
-    - "5M-steps"
+    - "10M-steps"

@@ -1,0 +1,11 @@
+[core]
+markdown.file_extensions = ["md"]
+
+[code_action]
+toc.enable = false
+
+[completion]
+wiki.style = "title-slug"
+
+[diagnostics]
+dead_link.enable = false

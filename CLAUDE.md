@@ -6,17 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a reinforcement learning project that trains an AI agent to play Super Mario Bros. It's a learning-focused ML project with the ultimate goal of applying these skills to cybersecurity applications (Suricata rule generation, intelligent incident reporting).
 
-**Current Status**: Phase 6 Complete (Feb 2026). v8 fine-tuning v7 weights. Entering Phase 7: Final Packaging.
+**Current Status**: Phase 6 (Feb 2026). v9 training with fixed reward shaping. Phase 7 (final packaging) after v9 completes.
 
 ## Infrastructure (ZenaOS)
 - Training runs inside `mlp-dev` distrobox (Fedora 43) — nes_py/pyglet need X11 libs unavailable on Nix
+- Distrobox has python3.13 and python3.14 — venv MUST use python3.13 (`poetry env use python3.13`). 3.14 breaks numpy/gym.
+- `pyrightconfig.json` uses `pythonVersion: "3.11"` intentionally for gym compat — do NOT change it.
+- Pyright import resolution errors are expected outside distrobox — packages only installed inside it.
 - PostgreSQL 16: podman container `mario-postgres`, volume `mario_pgdata`. Start with `podman start mario-postgres` after reboot.
-- Password: `Bingbongbing123` (no special chars — `!` causes shell escaping in podman env vars)
+- Password: `Bingbongbing123` (no special chars — `!` causes shell escaping in podman env vars). Old Fedora password had `!` suffix.
+- DB contains full experiment history: random, DQN, PPO v2-v5, v7, v8 (recovered from old Fedora pg18 install Feb 2026). Stale "running" experiments cleaned up.
 
 ## Training Status
-- v7 model beats World 1-1 (43%+ win rate). The "2700px ceiling" was a callback metrics bug, not a real plateau.
-- v8 = fine-tuning v7 weights (5M steps, LR 0.0001). Config supports `pretrained_model` in training section.
-- Project entering final packaging phase (Phase 7). Next: capture videos, final write-up.
+- v7/v8 both had broken reward shaping: `RewardShapingWrapper` x_delta bug penalized level completion (~-315 reward at stage transition). Agent learned to AVOID winning.
+- v9 = fresh training (10M steps, LR 0.0003, RAM/MlpPolicy) with fixed wrapper: x_delta clamp, stage-based completion bonus (+500), accumulated distance milestones.
+- `flag_get` from info dict is unreliable — use stage transition (`info["stage"]` change) or x_pos >= 3150 for completion detection.
+- Config supports `pretrained_model` in training section (not used for v9).
+- After v9: run `scripts/evaluate_all_models.py --num-episodes 50` for full model comparison.
 
 ---
 

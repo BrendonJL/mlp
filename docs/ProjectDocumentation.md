@@ -2,12 +2,27 @@
 id: ProjectDocumentation
 aliases: []
 tags:
+  - area/projects
   - project/mlp
-  - type/reference
+  - type/moc
   - status/active
 ---
 
 # Mario RL Agent - Project Documentation
+
+
+## Project Navigation
+
+- [[Tasks Dashboard]]
+- [[Projects Index]]
+
+## Daily Notes
+
+```dataview
+TABLE file.link AS "Daily Note", created AS "Created", join(tags, ", ") AS "Tags"
+FROM "Projects/MLP/daily"
+SORT file.name DESC
+```
 
 ## Project Overview
 
@@ -537,11 +552,11 @@ Complete paradigm shift: Instead of pixel observations with CnnPolicy, use RAM-b
 - `src/training/callbacks.py` - Added multi-stage distance tracking
 - `database/schema_migration_02.sql` - Added `max_x_pos`, `final_x_pos` columns
 
-### Phase 6: Evaluation & Fine-tuning ✅ Complete (Feb 2026)
+### Phase 6: Evaluation & Fine-tuning ✅ COMPLETE (Feb–Mar 2026)
 
 **Original Goal:** Teach the agent speedrunning techniques via imitation learning to break through the 2760px ceiling.
 
-**Actual Outcome:** The "ceiling" was a metrics bug. v7 was already beating 1-1.
+**Actual Outcome:** The "ceiling" was a metrics bug. v7 was already beating 1-1. Pivoted to reward shaping fix (v9) and full comparative evaluation.
 
 #### Part A: Imitation Learning POC — Abandoned
 
@@ -577,22 +592,64 @@ With fixed callbacks, v8 training immediately revealed:
 - Episodes with ~2753 distance and lower rewards (6440-6450) = died before finishing 1-1
 - The "ceiling" was the callback bug misreporting multi-stage progress, not a training limitation
 
+#### Part C: v9 — Fresh Training with Fixed Reward Shaping
+
+Both v7 and v8 had a reward shaping bug: `x_delta` at level transitions reset to ~0, producing -315 reward and training the agent to **avoid** beating the level.
+
+**v9 Fixes (`ppo_v9.yaml`):**
+- `x_delta` clamp: `if abs(x_delta) > 50: x_delta = 0`
+- Stage-based completion bonus: +500 reward on stage increment
+- Accumulated distance tracking across stage transitions
+- Extended milestones into World 1-2
+
+10M steps from scratch, LR 0.0003, RAM/MlpPolicy. Training completed Feb 2026.
+
+**v9 In-Training Results (89.2% completion at 9.4M steps):**
+- Avg distance: 3821 (routinely clearing 1-1, pushing into 1-2)
+- Avg reward: 7912 (highest of all experiments)
+- Max distance: 5288
+
+#### Part D: Full Evaluation (Mar 14, 2026)
+
+Ran `scripts/evaluate_all_models.py --num-episodes 50` across all 10 models.
+
+**Phase 6 Final Results:**
+
+| Model | Completion Rate | Avg Steps | Policy | Notes |
+|-------|----------------|-----------|--------|-------|
+| v9 | **100%** | **662** | RAM/MLP | Most efficient |
+| v5 | **100%** | 863 | Pixel/CNN | Highest step count |
+| v7/v8 | high reward | — | RAM/MLP | Reward shaping bug inflated scores |
+| v3/v4 | recovered | — | Pixel/CNN | Cross-machine segfault, rebuilt |
+
+**Key Finding:** v9 (1.5MB RAM model) outperforms v5 (21MB CNN model) on both completion rate and efficiency. RAM observations give direct game-state access; the agent doesn't need to infer state from pixels.
+
+**Model Recovery:** v3, v4, v5, v7 segfaulted on `PPO.load()` due to cross-machine PyTorch serialization. Recovered by extracting weights via `torch.load()` on raw `policy.pth` from the zip archives and rebuilding with `scripts/recover_models.py`.
+
 **Phase 6 Artifacts:**
-- `scripts/poc_frame_skip_replay.py` — Frame skip replay POC (complete)
-- `smbdataset/` — Downloaded demonstration data (3.4GB extracted)
+- `scripts/poc_frame_skip_replay.py` — Imitation learning POC
 - `configs/ppo_v8.yaml` — Fine-tuning config with pretrained model loading
+- `configs/ppo_v9.yaml` — Fixed reward shaping, fresh 10M training
+- `scripts/evaluate_all_models.py` — Multi-model evaluation (50 episodes each)
+- `scripts/recover_models.py` — Cross-machine model recovery tool
+- `scripts/visualize_eval.py` — Evaluation visualization charts (violin, completion, distance, efficiency)
+- `notebooks/training_analysis.ipynb` — Comprehensive training analysis notebook
+- `docs/evaluation_results.md` — Full 50-episode evaluation output
 - `src/training/train.py` — Added `pretrained_model` support via `PPO.load()`
+- `src/environments/wrappers.py` — Fixed `RewardShapingWrapper` (x_delta clamp, stage completion bonus)
 
 **Infrastructure Changes:**
 - Training moved to `mlp-dev` distrobox (Fedora 43) — resolves nes_py/pyglet X11 issues on ZenaOS/Nix
 - PostgreSQL 16 running as podman container (`mario-postgres`) with `mario_pgdata` volume
+- DB contains full experiment history: random, DQN, PPO v2-v5, v7, v8 (recovered from old Fedora pg18 install)
 
 **Key Lessons:**
 1. Always validate metrics before concluding there's a performance plateau
 2. Imitation learning from recorded demos has fundamental timing/mapping challenges
-3. Fine-tuning existing weights is far more efficient than building new pipelines when the model already works
+3. Reward shaping bugs cause anti-training: agent learns to actively avoid the desired behavior
+4. RAM observations can outperform pixel-based CNN models when game state is cleanly extractable
 
-### Phase 7: Production & Analysis ⏳ NEXT (Mar 2026)
+### Phase 7: Final Packaging ⏳ CURRENT (Mar 2026)
 
 - [ ] Containerize training environment with Docker:
   - [ ] Multi-stage build (training vs. inference)
@@ -661,3 +718,8 @@ Skills and tools developed in this project will directly transfer to cybersecuri
 ## Notes
 
 _This document will be updated as the project evolves. Use Obsidian's linking features to connect related concepts and create daily logs of progress._
+
+## Related
+
+- [[Projects Index]]
+- [[Tasks Dashboard]]
