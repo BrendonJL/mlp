@@ -41,14 +41,7 @@ The ratio was roughly **70% Claude / 30% me** on raw lines of code, but the lear
 
 All 10 models evaluated on World 1-1 (5 episodes each, rendered):
 
-https://github.com/user-attachments/assets/MLP_AllModels_5Ep_Eval.mp4
-
-<details>
-<summary>Can't see the video? Click here.</summary>
-
-The video file is located at [`docs/images/MLP_AllModels_5Ep_Eval.mp4`](docs/images/MLP_AllModels_5Ep_Eval.mp4).
-
-</details>
+[Watch the full evaluation video](docs/images/MLP_AllModels_5Ep_Eval.mp4)
 
 ---
 
